@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Student Calendar</title>
+</head>
+<body>
+    <div class="calendar">
+        <header>
+            <h1 id="monthYear"></h1>
+            <button id="prevMonth">&lt;</button>
+            <button id="nextMonth">&gt;</button>
+        </header>
+        <div class="days">
+            <div class="day" id="day0">Sun</div>
+            <div class="day" id="day1">Mon</div>
+            <div class="day" id="day2">Tue</div>
+            <div class="day" id="day3">Wed</div>
+            <div class="day" id="day4">Thu</div>
+            <div class="day" id="day5">Fri</div>
+            <div class="day" id="day6">Sat</div>
+        </div>
+        <div id="dates" class="dates"></div>
+    </div>
+        <!-- Event Modal -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add Event Details</h2>
+            <form id="eventForm">
+                <label for="eventTitle">Event Title</label>
+                <input type="text" id="eventTitle" required>
+
+                <label for="eventDescription">Description</label>
+                <textarea id="eventDescription" rows="3"></textarea>
+
+                <label for="eventTags">Tags</label>
+                <input type="text" id="eventTags" placeholder="E.g., meeting, finance">
+
+                <label for="eventLink">Link (optional)</label>
+                <input type="url" id="eventLink" placeholder="https://example.com">
+                
+                <button type="submit">Save Event</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

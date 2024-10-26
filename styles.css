@@ -1,4 +1,3 @@
-/* Reset Styles */
 * {
     margin: 0;
     padding: 0;
@@ -14,6 +13,7 @@ body {
     height: 100vh;
     background-color: #f4f6f8;
     color: #2d3748;
+    overflow: hidden; /* Prevents scroll when modal is open */
 }
 
 /* Calendar Container */
@@ -90,12 +90,15 @@ button:hover {
 /* Date Cell Styling */
 .date {
     display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
     height: 80px;
     background-color: #f7fafc;
     border-radius: 5px;
     cursor: pointer;
+    position: relative;
+    padding: 5px;
     transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
@@ -104,11 +107,35 @@ button:hover {
     transform: scale(1.05);
 }
 
+/* Date Number Styling */
+.date-number {
+    font-size: 1em;
+    font-weight: bold;
+    color: #2d3748;
+    margin-bottom: auto; /* Aligns to the top of the cell */
+}
+
+/* Event Styling */
+.event {
+    background-color: #e6f0ff;
+    color: #2d3748;
+    padding: 3px 5px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: 500;
+    text-align: center;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-top: auto; /* Aligns to the bottom of the cell */
+}
+
+
 /* Date Selection Styling */
 .date.selected {
     background-color: #2b6cb0;
     color: #ffffff;
-    font-weight: bold;
 }
 
 /* Responsive Design */
@@ -200,6 +227,7 @@ button[type="submit"] {
     font-weight: bold;
     font-size: 1em;
     transition: background-color 0.3s ease;
+    margin-top: 10px; /* Ensures button is reachable */
 }
 
 button[type="submit"]:hover {

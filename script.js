@@ -74,25 +74,34 @@ closeModal.onclick = function() {
 };
 
 // Save event data when form is submitted
+// Submit form to save event
 eventForm.addEventListener("submit", function(e) {
     e.preventDefault();
-    const date = eventForm.dataset.date;
-    const title = document.getElementById("eventTitle").value;
+    const date = eventForm.dataset.date; // Get the date from the form
+    const title = document.getElementById("eventTitle").value; // Get title from input
     const description = document.getElementById("eventDescription").value;
     const tags = document.getElementById("eventTags").value;
     const link = document.getElementById("eventLink").value;
 
-    // Store event details
+    // Save event details in `events` object
     events[date] = { title, description, tags, link };
 
-    // Display event title on the selected date
+    // Display event title on calendar date (as a sample display)
     const dateElement = document.querySelector(`.date[data-date="${date}"]`);
-    if (dateElement) {
-        dateElement.innerHTML = `<span class="event">${title}</span>`;
+    
+    // If the event already exists, replace the title; otherwise, append it
+    const eventSpan = dateElement.querySelector('.event');
+    if (eventSpan) {
+        eventSpan.textContent = title; // Update existing event
+    } else {
+        const newEventSpan = document.createElement('div');
+        newEventSpan.classList.add('event');
+        newEventSpan.textContent = title; // Create new event
+        dateElement.appendChild(newEventSpan);
     }
 
-    modal.style.display = "none";
-    eventForm.reset();
+    modal.style.display = "none"; // Close modal
+    eventForm.reset(); // Reset form
 });
 
 // Initial render

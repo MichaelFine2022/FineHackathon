@@ -38,11 +38,13 @@ function renderCalendar() {
 prevMonth.addEventListener('click', () => {
     currentDate.setMonth(currentDate.getMonth() - 1);
     renderCalendar();
+    fetchEvents();
 });
 
 nextMonth.addEventListener('click', () => {
     currentDate.setMonth(currentDate.getMonth() + 1);
     renderCalendar();
+    fetchEvents();
 });
 
 // Event modal elements
@@ -104,5 +106,34 @@ eventForm.addEventListener("submit", function(e) {
     eventForm.reset(); // Reset form
 });
 
+async function fetchEvents() {
+    try {
+        const response = await fetch('/events');
+        if (!response.ok) {
+            console.error("Error fetching events:", response.statusText);
+            return;
+        }
+        
+        const events = await response.json();
+        console.log("Fetched events:", events); // Add this line
+
+        // Render events to the calendar
+        document.querySelectorAll('.event').forEach(eventEl => eventEl.remove());
+        events.forEach(event => {
+            const dateElement = document.querySelector(`.date[data-date="${event.date}"]`);
+            if (dateElement) {
+                const eventSpan = document.createElement('div');
+                eventSpan.classList.add('event');
+                eventSpan.textContent = event.title;
+                dateElement.appendChild(eventSpan);
+            }
+        });
+    } catch (error) {
+        console.error("Error in fetchEvents:", error);
+    }
+}
+
+
 // Initial render
 renderCalendar();
+fetchEvents();

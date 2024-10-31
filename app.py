@@ -2,14 +2,10 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import os
 
-
 app = Flask(__name__)
-
-# Configure the SQLite database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///events.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize the database
 db = SQLAlchemy(app)
 
 # Define the Event model
@@ -17,7 +13,7 @@ class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(200), nullable=True)
-    date = db.Column(db.String(10), nullable=False)  # Store date as string (YYYY-MM-DD)
+    date = db.Column(db.String(10), nullable=False)
     tags = db.Column(db.String(100), nullable=True)
     link = db.Column(db.String(200), nullable=True)
 
@@ -26,7 +22,14 @@ class Event(db.Model):
 
 # Create the database and tables
 with app.app_context():
-    db.create_all()
+    db.create_all()  # This ensures tables are created if they don’t exist yet
+
+    # Add a test event within context
+    if not Event.query.first():  # Avoid duplicate entries on restarts
+        test_event = Event(title="Test Event", date="2024-01-01")
+        db.session.add(test_event)
+        db.session.commit()
+    print(Event.query.all())  # Should print the events, confirming persistence
 
 # Route to create a new event
 @app.route('/events', methods=['POST'])

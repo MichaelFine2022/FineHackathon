@@ -16,6 +16,7 @@ body {
     overflow: hidden; /* Prevents scroll when modal is open */
 }
 
+
 /* Calendar Container */
 .calendar {
     width: 90%;
@@ -107,6 +108,14 @@ button:hover {
     transform: scale(1.05);
 }
 
+.date.today {
+    background-color: #ffeb3b; 
+    color: black; 
+    font-weight: bold; 
+}
+
+
+
 /* Date Number Styling */
 .date-number {
     font-size: 1em;
@@ -136,6 +145,18 @@ button:hover {
 .date.selected {
     background-color: #2b6cb0;
     color: #ffffff;
+}
+
+.delete-event {
+    color: red; /* Red color for delete button */
+    margin-left: 5px; /* Spacing between title and delete button */
+    cursor: pointer; /* Pointer cursor for delete button */
+    font-weight: bold; /* Make it bold */
+    font-size: 1.2em; /* Increase the size */
+}
+
+.delete-event:hover {
+    color: darkred; /* Darker red on hover */
 }
 
 /* Responsive Design */

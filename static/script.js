@@ -1,15 +1,33 @@
-import PouchDB from 'pouchdb';
-//create a new database
+// Create a new database
 const db = new PouchDB('eventsDB');
 
-
+// DOM elements
 const monthYear = document.getElementById('monthYear');
 const dates = document.getElementById('dates');
 const prevMonth = document.getElementById('prevMonth');
 const nextMonth = document.getElementById('nextMonth');
+const modal = document.getElementById("eventModal");
+const closeModal = document.getElementsByClassName("close")[0];
+const eventForm = document.getElementById("eventForm");
 
 // Initialize the current date
 let currentDate = new Date();
+
+// Navigation with keyboard arrows
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') {
+        changeMonth(1);
+    } else if (e.key === 'ArrowLeft') {
+        changeMonth(-1);
+    }
+});
+
+// Change month and re-render calendar
+function changeMonth(direction) {
+    currentDate.setMonth(currentDate.getMonth() + direction);
+    renderCalendar();
+    fetchEvents();
+}
 
 // Render the calendar
 function renderCalendar() {
@@ -20,124 +38,142 @@ function renderCalendar() {
     // Set month and year header
     monthYear.textContent = currentDate.toLocaleString('default', { month: 'long' }) + ' ' + year;
 
-    // Get the first and last days of the month
+    // Calculate the first and last days of the month
     const firstDay = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
 
-    // Clear previous dates
-    dates.innerHTML = '';
+    // Clear previous dates and add empty placeholders
+    dates.innerHTML = '<div class="date empty"></div>'.repeat(firstDay);
 
-    // Add blank divs for the days before the start of the month
-    for (let i = 0; i < firstDay; i++) {
-        dates.innerHTML += '<div class="date empty"></div>';
-    }
-
-    // Generate days with data-date attributes
+    // Highlight today's date and generate calendar days
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
     for (let day = 1; day <= lastDate; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        dates.innerHTML += `<div class="date" data-date="${dateStr}">${day}</div>`;
+        const isToday = dateStr === today ? ' today' : '';
+        dates.innerHTML += `<div class="date${isToday}" data-date="${dateStr}">${day}</div>`;
     }
 }
 
 // Month navigation buttons
-prevMonth.addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    renderCalendar();
-    fetchEvents();
-});
-
-nextMonth.addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    renderCalendar();
-    fetchEvents();
-});
-
-// Event modal elements
-const modal = document.getElementById("eventModal");
-const closeModal = document.getElementsByClassName("close")[0];
-const eventForm = document.getElementById("eventForm");
-
-// Data structure for storing events
-let events = {};
+prevMonth.addEventListener('click', () => changeMonth(-1));
+nextMonth.addEventListener('click', () => changeMonth(1));
 
 // Open modal when a date is clicked
-dates.addEventListener("click", function(event) {
-    if (event.target.classList.contains("date") && !event.target.classList.contains("empty")) {
-        modal.style.display = "block";
-        const date = event.target.getAttribute("data-date");
-        eventForm.dataset.date = date;
-        const eventData = events[date];
-        
-        document.getElementById("eventTitle").value = eventData?.title || '';
-        document.getElementById("eventDescription").value = eventData?.description || '';
-        document.getElementById("eventTags").value = eventData?.tags || '';
-        document.getElementById("eventLink").value = eventData?.link || '';
+dates.addEventListener("click", (event) => {
+    const clickedDate = event.target.closest('.date');
+    if (clickedDate && !clickedDate.classList.contains("empty")) {
+        openModal(clickedDate.getAttribute("data-date"));
     }
 });
 
+// Open modal and populate event data
+async function openModal(date) {
+    modal.style.display = "block";
+    eventForm.dataset.date = date; // Store the date in the form for later use
+    
+    const eventData = await fetchEvent(date);
+    document.getElementById("eventTitle").value = eventData?.title || '';
+    document.getElementById("eventDescription").value = eventData?.description || '';
+    document.getElementById("eventTags").value = eventData?.tags || '';
+    document.getElementById("eventLink").value = eventData?.link || '';
+}
+
 // Close the modal
-closeModal.onclick = function() {
+closeModal.onclick = () => {
     modal.style.display = "none";
 };
 
 // Save event data when form is submitted
-// Submit form to save event
-eventForm.addEventListener("submit", function(e) {
-    e.preventDefault();
+eventForm.addEventListener("submit", async (e) => {
+    e.preventDefault(); // Prevent default form submission
     const date = eventForm.dataset.date; // Get the date from the form
-    const title = document.getElementById("eventTitle").value; // Get title from input
-    const description = document.getElementById("eventDescription").value;
-    const tags = document.getElementById("eventTags").value;
-    const link = document.getElementById("eventLink").value;
+    const eventData = {
+        _id: date, // Use the date as the document ID
+        title: document.getElementById("eventTitle").value,
+        description: document.getElementById("eventDescription").value,
+        tags: document.getElementById("eventTags").value,
+        link: document.getElementById("eventLink").value,
+    };
 
-    // Save event details in `events` object
-    events[date] = { title, description, tags, link };
-
-    // Display event title on calendar date (as a sample display)
-    const dateElement = document.querySelector(`.date[data-date="${date}"]`);
-    
-    // If the event already exists, replace the title; otherwise, append it
-    const eventSpan = dateElement.querySelector('.event');
-    if (eventSpan) {
-        eventSpan.textContent = title; // Update existing event
-    } else {
-        const newEventSpan = document.createElement('div');
-        newEventSpan.classList.add('event');
-        newEventSpan.textContent = title; // Create new event
-        dateElement.appendChild(newEventSpan);
+    try {
+        await db.put(eventData); // Always update or create event
+        console.log("Event saved successfully!");
+        updateEventInCalendar(eventData);
+        modal.style.display = "none"; // Close the modal
+        eventForm.reset(); // Reset the form
+    } catch (err) {
+        console.error("Error saving event:", err);
     }
-
-    modal.style.display = "none"; // Close modal
-    eventForm.reset(); // Reset form
 });
 
+// Fetch events from the database
 async function fetchEvents() {
     try {
-        const response = await fetch('/events');
-        if (!response.ok) {
-            console.error("Error fetching events:", response.statusText);
-            return;
-        }
-        
-        const events = await response.json();
-        console.log("Fetched events:", events); // Add this line
+        const result = await db.allDocs({ include_docs: true });
+        const events = result.rows.map(row => row.doc);
 
-        // Render events to the calendar
+        // Clear previous event elements
         document.querySelectorAll('.event').forEach(eventEl => eventEl.remove());
-        events.forEach(event => {
-            const dateElement = document.querySelector(`.date[data-date="${event.date}"]`);
-            if (dateElement) {
-                const eventSpan = document.createElement('div');
-                eventSpan.classList.add('event');
-                eventSpan.textContent = event.title;
-                dateElement.appendChild(eventSpan);
-            }
-        });
+
+        // Render events on the calendar
+        events.forEach(event => updateEventDisplay(event._id, event.title));
     } catch (error) {
-        console.error("Error in fetchEvents:", error);
+        console.error("Error fetching events:", error);
     }
 }
 
+// Fetch a specific event by date
+async function fetchEvent(date) {
+    try {
+        return await db.get(date); // Use the date as the document ID
+    } catch (error) {
+        console.error("Error fetching event:", error);
+        return null; // Return null if there's an error
+    }
+}
+
+// Update the display of events on the calendar
+function updateEventDisplay(date, title) {
+    const dateElement = document.querySelector(`.date[data-date="${date}"]`);
+    if (dateElement) {
+        const eventSpan = createEventElement(title, date);
+        dateElement.appendChild(eventSpan); // Append event to the calendar
+    }
+}
+
+// Create an event display element with a delete button
+function createEventElement(title, date) {
+    const eventSpan = document.createElement('div');
+    eventSpan.classList.add('event');
+    eventSpan.textContent = title;
+
+    // Create delete button (red "X")
+    const deleteButton = document.createElement('span');
+    deleteButton.classList.add('delete-event');
+    deleteButton.textContent = 'X'; 
+    deleteButton.title = 'Delete Event';
+
+    // Add event listener for deletion
+    deleteButton.addEventListener('click', async (e) => {
+        e.stopPropagation(); // Prevent the date click event
+        await deleteEvent(date, eventSpan);
+    });
+
+    eventSpan.appendChild(deleteButton); // Append the delete button to the event
+    return eventSpan;
+}
+
+// Delete an event from PouchDB and the UI
+async function deleteEvent(date, eventSpan) {
+    try {
+        const eventDoc = await db.get(date); // Fetch the event document
+        await db.remove(eventDoc); // Remove the event from PouchDB
+        console.log("Event deleted successfully!");
+        eventSpan.remove(); // Remove the event from the calendar UI
+    } catch (err) {
+        console.error("Error deleting event:", err);
+    }
+}
 
 // Initial render
 renderCalendar();

@@ -1,3 +1,8 @@
+import PouchDB from 'pouchdb';
+//create a new database
+const db = new PouchDB('eventsDB');
+
+
 const monthYear = document.getElementById('monthYear');
 const dates = document.getElementById('dates');
 const prevMonth = document.getElementById('prevMonth');

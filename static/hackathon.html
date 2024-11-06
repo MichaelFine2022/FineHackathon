@@ -25,12 +25,12 @@
         </div>
         <div id="dates" class="dates"></div>
     </div>
-        <!-- Event Modal -->
-    <div id="eventModal" class="modal">
+    <!-- Add Event Modal -->
+    <div id="addEventModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Add Event Details</h2>
-            <form id="eventForm">
+            <form id="addEventForm">
                 <label for="eventTitle">Event Title</label>
                 <input type="text" id="eventTitle" required>
 
@@ -47,6 +47,28 @@
             </form>
         </div>
     </div>
+
+
+    <div id="updateEventModal" class="modal">
+        <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Update Event</h3>
+        <form id="updateEventForm">
+            <label for="eventTitle">Title</label>
+            <input type="text" id="eventTitle" name="eventTitle" required>
+    
+            <label for="eventDescription">Description</label>
+            <textarea id="eventDescription" name="eventDescription" required></textarea>
+    
+            <label for="eventDate">Date</label>
+            <input type="date" id="eventDate" name="eventDate" required>
+    
+            <button type="submit">Save Changes</button>
+        </form>
+        </div>
+    </div>
+  
+
 
     <script src="script.js"></script>
 </body>

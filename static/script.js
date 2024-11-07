@@ -36,7 +36,7 @@ function renderCalendar() {
     const year = currentDate.getFullYear();
 
     // Set month and year header
-    monthYear.textContent = currentDate.toLocaleString('default', { month: 'long' }) + ' ' + year;
+    monthYear.textContent = `${currentDate.toLocaleString('default', { month: 'long' })} ${year}`;
 
     // Calculate the first and last days of the month
     const firstDay = new Date(year, month, 1).getDay();
@@ -75,16 +75,16 @@ async function openModal(date, eventId) {
     if (eventId) {
         const eventData = await fetchEvent(date, eventId);
         if (eventData) {
-            document.getElementById("eventTitle").value = eventData?.title || '';
-            document.getElementById("eventDescription").value = eventData?.description || '';
-            document.getElementById("eventTags").value = eventData?.tags || '';
-            document.getElementById("eventLink").value = eventData?.link || '';
+            // Populate the form with existing event data
+            document.getElementById("eventTitle").value = eventData.title || '';
+            document.getElementById("eventDescription").value = eventData.description || '';
+            document.getElementById("eventTags").value = eventData.tags || '';
+            document.getElementById("eventLink").value = eventData.link || '';
         } else {
             console.error(`No event found for date: ${date} and eventId: ${eventId}`);
         }
     } else {
-        // Reset form for new event
-        eventForm.reset();
+        eventForm.reset(); // Reset form for new event
     }
 }
 
@@ -97,7 +97,9 @@ closeModal.onclick = () => {
 eventForm.addEventListener("submit", async (e) => {
     e.preventDefault(); // Prevent default form submission
     const date = eventForm.dataset.date; // Get the date from the form
-    const eventId = eventForm.dataset.eventId || Date.now(); // Use eventId or generate new one
+    const eventId = eventForm.dataset.eventId ? eventForm.dataset.eventId : Date.now(); // Use eventId or generate new one
+
+    // Create event data object
     const eventData = {
         _id: `${date}_${eventId}`, // Use date and eventId as the document ID
         title: document.getElementById("eventTitle").value,
@@ -107,9 +109,9 @@ eventForm.addEventListener("submit", async (e) => {
     };
 
     try {
-        await db.put(eventData); // Always update or create event
+        await db.put(eventData); // Update or create event
         console.log("Event saved successfully!");
-        updateEventDisplay(date, eventData.title, eventId); // Use the correct function here
+        updateEventDisplay(date, eventData.title, eventId); // Update display with the new/updated event
         modal.style.display = "none"; // Close the modal
         eventForm.reset(); // Reset the form
     } catch (err) {
@@ -127,7 +129,7 @@ async function fetchEvents() {
         document.querySelectorAll('.event').forEach(eventEl => eventEl.remove());
 
         // Render events on the calendar
-        events.forEach(event => updateEventDisplay(event._id.split('_')[0], event.title, event._id)); // Pass the full ID
+        events.forEach(event => updateEventDisplay(event._id.split('_')[0], event.title, event._id));
     } catch (error) {
         console.error("Error fetching events:", error);
     }
@@ -143,14 +145,14 @@ async function fetchEvent(date, eventId) {
     }
 }
 
-// Update the display of events on the calendar
 function updateEventDisplay(date, title, eventId) {
     const dateElement = document.querySelector(`.date[data-date="${date}"]`);
     if (dateElement) {
         const eventSpan = createEventElement(title, date, eventId); // Pass the event ID
         dateElement.appendChild(eventSpan); // Append event to the calendar
     }
-}
+
+
 
 // Create an event display element with a delete button
 function createEventElement(title, date, eventId) {
@@ -168,12 +170,6 @@ function createEventElement(title, date, eventId) {
     deleteButton.addEventListener('click', async (e) => {
         e.stopPropagation(); // Prevent the date click event
         await deleteEvent(date, eventId, eventSpan); // Pass event ID
-    });
-
-    // Add event listener for editing
-    eventSpan.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent the date click event
-        openModal(date, eventId); // Open modal for editing
     });
 
     eventSpan.appendChild(deleteButton); // Append the delete button to the event

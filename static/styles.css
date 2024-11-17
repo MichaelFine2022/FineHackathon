@@ -14,6 +14,7 @@
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 :root.dark-mode {
     /* Dark mode colors */
     --background-color: #1e1e1e;
@@ -25,6 +26,8 @@
 
 =======
 >>>>>>> parent of ffcfbfe (started on updating events)
+=======
+>>>>>>> parent of ffcfbfe (started on updating events)
 /* Body Styling */
 body {
     font-family: 'Arial', sans-serif;
@@ -34,6 +37,7 @@ body {
     align-items: center;
     justify-content: center;
     height: 100vh;
+<<<<<<< HEAD
 <<<<<<< HEAD
     overflow: hidden;
 }
@@ -54,6 +58,13 @@ body {
 #theme-toggle:hover {
     background-color: var(--button-color);
 }
+=======
+    background-color: #f4f6f8;
+    color: #2d3748;
+    overflow: hidden; /* Prevents scroll when modal is open */
+}
+
+>>>>>>> parent of ffcfbfe (started on updating events)
 =======
     background-color: #f4f6f8;
     color: #2d3748;
@@ -166,6 +177,9 @@ button:hover {
 =======
     color: #2d3748;
     margin-bottom: auto; /* Aligns to the top of the cell */
+<<<<<<< HEAD
+>>>>>>> parent of ffcfbfe (started on updating events)
+=======
 >>>>>>> parent of ffcfbfe (started on updating events)
 }
 
@@ -182,8 +196,15 @@ button:hover {
     white-space: nowrap;
     text-overflow: ellipsis;
 <<<<<<< HEAD
+<<<<<<< HEAD
 }
 
+=======
+    margin-top: auto; /* Aligns to the bottom of the cell */
+}
+
+
+>>>>>>> parent of ffcfbfe (started on updating events)
 =======
     margin-top: auto; /* Aligns to the bottom of the cell */
 }
@@ -198,17 +219,23 @@ button:hover {
 
 .delete-event {
 <<<<<<< HEAD
+<<<<<<< HEAD
     color: red;
     margin-left: 5px;
     cursor: pointer;
     font-weight: bold;
     font-size: 1em;
 =======
+=======
+>>>>>>> parent of ffcfbfe (started on updating events)
     color: red; /* Red color for delete button */
     margin-left: 5px; /* Spacing between title and delete button */
     cursor: pointer; /* Pointer cursor for delete button */
     font-weight: bold; /* Make it bold */
     font-size: 1.2em; /* Increase the size */
+<<<<<<< HEAD
+>>>>>>> parent of ffcfbfe (started on updating events)
+=======
 >>>>>>> parent of ffcfbfe (started on updating events)
 }
 
@@ -304,6 +331,10 @@ button[type="submit"] {
     font-size: 1em;
     transition: background-color 0.3s ease;
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+    margin-top: 10px; /* Ensures button is reachable */
+>>>>>>> parent of ffcfbfe (started on updating events)
 =======
     margin-top: 10px; /* Ensures button is reachable */
 >>>>>>> parent of ffcfbfe (started on updating events)

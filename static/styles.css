@@ -1,34 +1,68 @@
+/* Reset & Base */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
+:root {
+    /* Light mode colors */
+    --background-color: #ffffff;
+    --text-color: #333333;
+    --button-color: #007bff;
+    --highlight-color: #2b6cb0;
+    --event-background: #f7fafc;
+}
+
+:root.dark-mode {
+    /* Dark mode colors */
+    --background-color: #1e1e1e;
+    --text-color: #ffffff;
+    --button-color: #0056b3;
+    --highlight-color: #4a90e2;
+    --event-background: #333333;
+}
 
 /* Body Styling */
 body {
     font-family: 'Arial', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
     display: flex;
     align-items: center;
     justify-content: center;
     height: 100vh;
-    background-color: #f4f6f8;
-    color: #2d3748;
-    overflow: hidden; /* Prevents scroll when modal is open */
+    overflow: hidden;
 }
 
+#theme-toggle {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 8px 15px;
+    border-radius: 5px;
+    background-color: var(--highlight-color);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#theme-toggle:hover {
+    background-color: var(--button-color);
+}
 
 /* Calendar Container */
 .calendar {
     width: 90%;
     max-width: 600px;
-    background-color: #ffffff;
+    background-color: var(--background-color);
     border-radius: 8px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease;
 }
 .calendar:hover {
-    transform: scale(1.02);
+    transform: scale(1.01);
 }
 
 /* Header Styling */
@@ -36,10 +70,9 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #2b6cb0;
+    background-color: var(--highlight-color);
     color: #ffffff;
-    padding: 15px 20px;
-    font-size: 1.5em;
+    padding: 15px;
 }
 
 header h1 {
@@ -50,17 +83,17 @@ header h1 {
 /* Navigation Buttons */
 button {
     background-color: #ffffff;
-    border: 2px solid #2b6cb0;
-    color: #2b6cb0;
-    padding: 8px 15px;
-    border-radius: 5px;
+    border: 2px solid var(--highlight-color);
+    color: var(--highlight-color);
+    padding: 5px 12px;
+    border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 button:hover {
-    background-color: #2b6cb0;
+    background-color: var(--highlight-color);
     color: #ffffff;
 }
 
@@ -68,16 +101,15 @@ button:hover {
 .days {
     display: flex;
     background-color: #e2e8f0;
-    color: #2d3748;
+    color: var(--text-color);
     font-weight: bold;
     font-size: 1em;
-    padding: 10px 0;
+    padding: 8px 0;
 }
 
 .day {
     flex: 1;
     text-align: center;
-    padding: 5px;
 }
 
 /* Dates Grid Styling */
@@ -95,76 +127,65 @@ button:hover {
     justify-content: space-between;
     align-items: center;
     height: 80px;
-    background-color: #f7fafc;
+    background-color: var(--event-background);
     border-radius: 5px;
-    cursor: pointer;
-    position: relative;
     padding: 5px;
-    transition: background-color 0.3s ease, transform 0.3s ease;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    cursor: pointer;
 }
 
 .date:hover {
     background-color: #bee3f8;
-    transform: scale(1.05);
 }
 
 .date.today {
-    background-color: #ffeb3b; 
-    color: black; 
-    font-weight: bold; 
+    background-color: #ffeb3b;
+    color: black;
+    font-weight: bold;
 }
 
-
-
-/* Date Number Styling */
 .date-number {
     font-size: 1em;
     font-weight: bold;
-    color: #2d3748;
-    margin-bottom: auto; /* Aligns to the top of the cell */
+    color: var(--text-color);
 }
 
 /* Event Styling */
 .event {
     background-color: #e6f0ff;
-    color: #2d3748;
+    color: var(--text-color);
     padding: 3px 5px;
     border-radius: 4px;
-    font-size: 0.75em;
+    font-size: 0.8em;
     font-weight: 500;
     text-align: center;
-    width: 100%;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    margin-top: auto; 
-    z-index: 1;
 }
-
 
 /* Date Selection Styling */
 .date.selected {
-    background-color: #2b6cb0;
+    background-color: var(--highlight-color);
     color: #ffffff;
 }
 
 .delete-event {
-    color: red; /* Red color for delete button */
-    margin-left: 5px; /* Spacing between title and delete button */
-    cursor: pointer; /* Pointer cursor for delete button */
-    font-weight: bold; /* Make it bold */
-    font-size: 1.2em; /* Increase the size */
+    color: red;
+    margin-left: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1em;
 }
 
 .delete-event:hover {
-    color: darkred; /* Darker red on hover */
+    color: darkred;
 }
 
 /* Responsive Design */
 @media (max-width: 480px) {
     header {
-        font-size: 1.2em;
-        padding: 10px;
+        font-size: 1em;
     }
 
     .day, .date {
@@ -214,7 +235,7 @@ button:hover {
 }
 
 .close:hover {
-    color: #2b6cb0;
+    color: var(--highlight-color);
 }
 
 /* Form Styling */
@@ -222,7 +243,7 @@ label {
     font-weight: bold;
     display: block;
     margin-top: 15px;
-    color: #2d3748;
+    color: var(--text-color);
 }
 
 input, textarea {
@@ -231,7 +252,6 @@ input, textarea {
     margin: 5px 0 15px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 0.95em;
 }
 
 textarea {
@@ -239,17 +259,16 @@ textarea {
 }
 
 button[type="submit"] {
-    background-color: #2b6cb0;
+    background-color: var(--highlight-color);
     color: #ffffff;
-    padding: 12px;
+    padding: 10px;
     border: none;
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
     width: 100%;
     font-weight: bold;
     font-size: 1em;
     transition: background-color 0.3s ease;
-    margin-top: 10px; /* Ensures button is reachable */
 }
 
 button[type="submit"]:hover {

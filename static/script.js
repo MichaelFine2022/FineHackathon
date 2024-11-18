@@ -198,6 +198,10 @@ function showCalendar(month, year) {
             // Prepare the calendar
             let firstDay = new Date(year, month, 1).getDay();
             let tbl = document.getElementById("calendar-body");
+            /*let close = document.createElement('div');
+            close.id = "close-button"
+            close.textContent = 'X';
+            tbl.appendChild(close);*/
             tbl.innerHTML = ""; // Clear previous content
             monthAndYear.innerHTML = months[month] + " " + year;
             selectYear.value = year;

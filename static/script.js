@@ -7,8 +7,16 @@ const addEventModal = document.getElementById("addEventModal");
 const updateEventModal = document.getElementById("updateEventModal");
 const closeModalButtons = document.querySelectorAll(".close");
 const eventForm = document.getElementById("addEventForm");
+const toggleButton = document.getElementById('toggle-button');
 
 let currentDate = new Date();
+
+// Apply theme based on localStorage when page loads
+const body = document.body;
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'dark') {
+    body.classList.add('dark-mode');
+}
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') changeMonth(1);
@@ -99,11 +107,16 @@ async function fetchEvents() {
         const result = await db.allDocs({ include_docs: true });
         document.querySelectorAll('.event').forEach(eventEl => eventEl.remove());
 
+        const noEventsMessage = document.querySelector('.no-events-message');
         if (result.rows.length === 0) {
-            const noEventsMessage = document.createElement('div');
-            noEventsMessage.textContent = "No events found.";
-            dates.appendChild(noEventsMessage);
+            if (!noEventsMessage) {
+                const noEventsMessage = document.createElement('div');
+                noEventsMessage.classList.add('no-events-message');
+                noEventsMessage.textContent = "No events found.";
+                dates.appendChild(noEventsMessage);
+            }
         } else {
+            if (noEventsMessage) noEventsMessage.remove();
             result.rows.map(row => row.doc).forEach(event => {
                 if (event._id) {
                     updateEventDisplay(event._id.split('_')[0], event.title, event._id);
@@ -135,7 +148,7 @@ function createEventElement(title, date, eventId) {
 
     deleteButton.addEventListener('click', async (e) => {
         e.stopPropagation();
-        await deleteEvent(eventId, eventSpan);
+        await deleteEvent(`${date}_${eventId}`, eventSpan);
     });
 
     eventSpan.appendChild(deleteButton);
@@ -152,49 +165,16 @@ async function deleteEvent(eventId, eventSpan) {
     }
 }
 
+// Initialize the calendar and fetch events
 renderCalendar();
 fetchEvents();
 
-document.addEventListener("DOMContentLoaded", () => {
-    const toggleButton = document.querySelector("#theme-toggle");
-
-    if (!toggleButton) {
-        console.error("Toggle button not found.");
-        return;
-    }
-
-    // Initial theme state (default to light)
-    let currentTheme = "light";
-
-    // Apply the initial theme
-    applyTheme();
-
-    // Update button text based on the current theme
-    updateButtonText();
-
-    // Event listener for theme toggle button
-    toggleButton.addEventListener("click", () => {
-        // Toggle the theme state
-        currentTheme = currentTheme === "light" ? "dark" : "light";
-
-        // Apply the updated theme
-        applyTheme();
-
-        // Update button text
-        updateButtonText();
-    });
-
-    function applyTheme() {
-        if (currentTheme === "dark") {
-            document.body.classList.add("dark-mode");
-        } else {
-            document.body.classList.remove("dark-mode");
-        }
-    }
-
-    function updateButtonText() {
-        const isDarkMode = document.body.classList.contains("dark-mode");
-        toggleButton.textContent = isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode";
+// Apply dark mode toggle
+toggleButton.addEventListener('click', () => {
+    body.classList.toggle('dark-mode');
+    if (body.classList.contains('dark-mode')) {
+        localStorage.setItem('theme', 'dark');
+    } else {
+        localStorage.setItem('theme', 'light');
     }
 });
-

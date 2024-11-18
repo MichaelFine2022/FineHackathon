@@ -1,180 +1,314 @@
-const db = new PouchDB('eventsDB');
-const monthYear = document.getElementById('monthYear');
-const dates = document.getElementById('dates');
-const prevMonth = document.getElementById('prevMonth');
-const nextMonth = document.getElementById('nextMonth');
-const addEventModal = document.getElementById("addEventModal");
-const updateEventModal = document.getElementById("updateEventModal");
-const closeModalButtons = document.querySelectorAll(".close");
-const eventForm = document.getElementById("addEventForm");
-const toggleButton = document.getElementById('toggle-button');
+let events = new PouchDB('events');
 
-let currentDate = new Date();
+// letiables to store event input fields and reminder list
+let eventDateInput =
+    document.getElementById("eventDate");
+let eventTitleInput =
+    document.getElementById("eventTitle");
+let eventDescriptionInput =
+    document.getElementById("eventDescription");
+let reminderList =
+    document.getElementById("reminderList");
+let
 
-// Apply theme based on localStorage when page loads
-const body = document.body;
-const savedTheme = localStorage.getItem('theme');
-if (savedTheme === 'dark') {
-    body.classList.add('dark-mode');
-}
 
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight') changeMonth(1);
-    else if (e.key === 'ArrowLeft') changeMonth(-1);
-});
 
-function changeMonth(direction) {
-    currentDate.setMonth(currentDate.getMonth() + direction);
-    renderCalendar();
-    fetchEvents();
-}
+function addEvent() {
+    // Get inputs
+    let date = eventDateInput.value;
+    let title = eventTitleInput.value.trim();
+    let description = eventDescriptionInput.value.trim();
 
-function renderCalendar() {
-    currentDate.setDate(1);
-    const month = currentDate.getMonth();
-    const year = currentDate.getFullYear();
-
-    monthYear.textContent = `${currentDate.toLocaleString('default', { month: 'long' })} ${year}`;
-
-    const firstDay = new Date(year, month, 1).getDay();
-    const lastDate = new Date(year, month + 1, 0).getDate();
-
-    dates.innerHTML = '<div class="date empty"></div>'.repeat(firstDay);
-
-    const today = new Date().toISOString().split('T')[0];
-    for (let day = 1; day <= lastDate; day++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const isToday = dateStr === today ? ' today' : '';
-        dates.innerHTML += `<div class="date${isToday}" data-date="${dateStr}">${day}</div>`;
+    // Validate inputs
+    if (!date || !title) {
+        alert("Date and title are required to add an event.");
+        return;
     }
-}
 
-prevMonth.addEventListener('click', () => changeMonth(-1));
-nextMonth.addEventListener('click', () => changeMonth(1));
+    // Create a unique document ID using date and title
+    let eventId = `event_${date}_${new Date().getTime()}`;
 
-dates.addEventListener("click", (event) => {
-    const clickedDate = event.target.closest('.date');
-    if (clickedDate && !clickedDate.classList.contains("empty")) {
-        openModal(clickedDate.getAttribute("data-date"));
-    }
-});
-
-function openModal(date) {
-    addEventModal.style.display = "block";
-    eventForm.dataset.date = date;
-    eventForm.reset();
-}
-
-function closeModal() {
-    addEventModal.style.display = "none";
-    updateEventModal.style.display = "none";
-}
-
-closeModalButtons.forEach(button => {
-    button.addEventListener("click", closeModal);
-});
-
-window.addEventListener("click", (event) => {
-    if (event.target === addEventModal || event.target === updateEventModal) {
-        closeModal();
-    }
-});
-
-eventForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const date = eventForm.dataset.date;
-    const eventId = Date.now().toString();
-
-    const eventData = {
-        _id: `${date}_${eventId}`,
-        title: document.getElementById("eventTitle").value,
-        description: document.getElementById("eventDescription").value,
-        tags: document.getElementById("eventTags").value,
-        link: document.getElementById("eventLink").value,
+    // Event document structure
+    let eventDoc = {
+        _id: eventId, 
+        date: date,
+        title: title,
+        description: description
     };
 
-    try {
-        await db.put(eventData);
-        updateEventDisplay(date, eventData.title, eventId);
-        closeModal();
-    } catch (err) {
-        console.error("Error saving event:", err);
+    // Add the document to PouchDB
+    events.put(eventDoc)
+        .then(() => {
+            console.log("Event added successfully:", eventDoc);
+            // Refresh calendar view and reset inputs
+            showCalendar(currentMonth, currentYear);
+            eventDateInput.value = "";
+            eventTitleInput.value = "";
+            eventDescriptionInput.value = "";
+            displayReminders();
+        })
+        .catch((error) => {
+            console.error("Error adding event:", error);
+            alert("Failed to add the event. Please try again.");
+        });
+}
+
+// Function to delete an event by ID
+function deleteEvent(eventId) {
+    // Find the index of the event with the given ID
+    let eventIndex =
+        events.findIndex((event) =>
+            event.id === eventId);
+
+    if (eventIndex !== -1) {
+        // Remove the event from the events array
+        events.splice(eventIndex, 1);
+        showCalendar(currentMonth, currentYear);
+        displayReminders();
     }
-});
+}
 
-async function fetchEvents() {
-    try {
-        const result = await db.allDocs({ include_docs: true });
-        document.querySelectorAll('.event').forEach(eventEl => eventEl.remove());
+// Function to display reminders
+function displayReminders() {
+    reminderList.innerHTML = "";
+    for (let i = 0; i < events.length; i++) {
+        let event = events[i];
+        let eventDate = new Date(event.date);
+        if (eventDate.getMonth() ===
+            currentMonth &&
+            eventDate.getFullYear() ===
+            currentYear) {
+            let listItem = document.createElement("li");
+            listItem.innerHTML =
+                `<strong>${event.title}</strong> - 
+            ${event.description} on 
+            ${eventDate.toLocaleDateString()}`;
 
-        const noEventsMessage = document.querySelector('.no-events-message');
-        if (result.rows.length === 0) {
-            if (!noEventsMessage) {
-                const noEventsMessage = document.createElement('div');
-                noEventsMessage.classList.add('no-events-message');
-                noEventsMessage.textContent = "No events found.";
-                dates.appendChild(noEventsMessage);
-            }
-        } else {
-            if (noEventsMessage) noEventsMessage.remove();
-            result.rows.map(row => row.doc).forEach(event => {
-                if (event._id) {
-                    updateEventDisplay(event._id.split('_')[0], event.title, event._id);
-                }
-            });
+            // Add a delete button for each reminder item
+            let deleteButton =
+                document.createElement("button");
+            deleteButton.className = "delete-event";
+            deleteButton.textContent = "Delete";
+            deleteButton.onclick = function () {
+                deleteEvent(event.id);
+            };
+
+            listItem.appendChild(deleteButton);
+            reminderList.appendChild(listItem);
         }
-    } catch (error) {
-        console.error("Error fetching events:", error);
     }
 }
 
-function updateEventDisplay(date, title, eventId) {
-    const dateElement = document.querySelector(`.date[data-date="${date}"]`);
-    if (dateElement) {
-        const eventSpan = createEventElement(title, date, eventId);
-        dateElement.appendChild(eventSpan);
+// Function to generate a range of 
+// years for the year select input
+function generate_year_range(start, end) {
+    let years = "";
+    for (let year = start; year <= end; year++) {
+        years += "<option value='" +
+            year + "'>" + year + "</option>";
     }
+    return years;
 }
 
-function createEventElement(title, date, eventId) {
-    const eventSpan = document.createElement('div');
-    eventSpan.classList.add('event');
-    eventSpan.textContent = title;
+// Initialize date-related letiables
+today = new Date();
+currentMonth = today.getMonth();
+currentYear = today.getFullYear();
+selectYear = document.getElementById("year");
+selectMonth = document.getElementById("month");
 
-    const deleteButton = document.createElement('span');
-    deleteButton.classList.add('delete-event');
-    deleteButton.textContent = 'X';
-    deleteButton.title = 'Delete Event';
+createYear = generate_year_range(1970, 2050);
 
-    deleteButton.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        await deleteEvent(`${date}_${eventId}`, eventSpan);
+document.getElementById("year").innerHTML = createYear;
+
+let calendar = document.getElementById("calendar");
+
+let months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+];
+let days = [
+    "Sun", "Mon", "Tue", "Wed",
+    "Thu", "Fri", "Sat"];
+
+$dataHead = "<tr>";
+for (dhead in days) {
+    $dataHead += "<th data-days='" +
+        days[dhead] + "'>" +
+        days[dhead] + "</th>";
+}
+$dataHead += "</tr>";
+
+document.getElementById("thead-month").innerHTML = $dataHead;
+
+monthAndYear =
+    document.getElementById("monthAndYear");
+showCalendar(currentMonth, currentYear);
+
+// Function to navigate to the next month
+function next() {
+    currentYear = currentMonth === 11 ?
+        currentYear + 1 : currentYear;
+    currentMonth = (currentMonth + 1) % 12;
+    showCalendar(currentMonth, currentYear);
+}
+
+// Function to navigate to the previous month
+function previous() {
+    currentYear = currentMonth === 0 ?
+        currentYear - 1 : currentYear;
+    currentMonth = currentMonth === 0 ?
+        11 : currentMonth - 1;
+    showCalendar(currentMonth, currentYear);
+}
+
+// Function to jump to a specific month and year
+function jump() {
+    currentYear = parseInt(selectYear.value);
+    currentMonth = parseInt(selectMonth.value);
+    showCalendar(currentMonth, currentYear);
+}
+
+// Function to display the calendar
+function showCalendar(month, year) {
+    // Fetch all events for the specified month and year from PouchDB
+    events.allDocs({ include_docs: true })
+        .then((result) => {
+            const allEvents = result.rows.map(row => row.doc);
+
+            // Filter events for the current month and year
+            const eventsForMonth = allEvents.filter(event => {
+                const eventDate = new Date(event.date);
+                return (
+                    eventDate.getFullYear() === year &&
+                    eventDate.getMonth() === month
+                );
+            });
+
+            // Prepare the calendar
+            let firstDay = new Date(year, month, 1).getDay();
+            let tbl = document.getElementById("calendar-body");
+            tbl.innerHTML = ""; // Clear previous content
+            monthAndYear.innerHTML = months[month] + " " + year;
+            selectYear.value = year;
+            selectMonth.value = month;
+
+            let date = 1;
+            for (let i = 0; i < 6; i++) {
+                let row = document.createElement("tr");
+
+                for (let j = 0; j < 7; j++) {
+                    if (i === 0 && j < firstDay) {
+                        // Blank cells for days before the first of the month
+                        let cell = document.createElement("td");
+                        cell.appendChild(document.createTextNode(""));
+                        row.appendChild(cell);
+                    } else if (date > daysInMonth(month, year)) {
+                        // Stop after the last day of the month
+                        break;
+                    } else {
+                        let cell = document.createElement("td");
+                        cell.setAttribute("data-date", date);
+                        cell.setAttribute("data-month", month + 1); // Make 1-based
+                        cell.setAttribute("data-year", year);
+                        cell.setAttribute("data-month_name", months[month]);
+                        cell.className = "date-picker";
+                        cell.innerHTML = `<span>${date}</span>`;
+
+                        // Highlight today's date
+                        if (
+                            date === today.getDate() &&
+                            year === today.getFullYear() &&
+                            month === today.getMonth()
+                        ) {
+                            cell.classList.add("selected");
+                        }
+
+                        // Check if there are events on this date
+                        const eventsForDate = eventsForMonth.filter(event => {
+                            const eventDate = new Date(event.date);
+                            return eventDate.getDate() === date;
+                        });
+
+                        if (eventsForDate.length > 0) {
+                            cell.classList.add("event-marker");
+
+                            // Add tooltips for each event
+                            const tooltip = document.createElement("div");
+                            tooltip.className = "event-tooltip";
+                            eventsForDate.forEach(event => {
+                                let eventDetails = document.createElement("div");
+                                eventDetails.innerHTML = `<strong>${event.title}</strong>: ${event.description}`;
+                                tooltip.appendChild(eventDetails);
+                            });
+                            cell.appendChild(tooltip);
+                        }
+
+                        row.appendChild(cell);
+                        date++;
+                    }
+                }
+
+                tbl.appendChild(row);
+            }
+
+            displayReminders();
+        })
+        .catch((error) => {
+            console.error("Error fetching events from PouchDB:", error);
+        });
+}
+
+
+// Function to create an event tooltip
+function createEventTooltip(date, month, year) {
+    let tooltip = document.createElement("div");
+    tooltip.className = "event-tooltip";
+    let eventsOnDate = getEventsOnDate(date, month, year);
+    for (let i = 0; i < eventsOnDate.length; i++) {
+        let event = eventsOnDate[i];
+        let eventDate = new Date(event.date);
+        let eventText = `<strong>${event.title}</strong> - 
+            ${event.description} on 
+            ${eventDate.toLocaleDateString()}`;
+        let eventElement = document.createElement("p");
+        eventElement.innerHTML = eventText;
+        tooltip.appendChild(eventElement);
+    }
+    return tooltip;
+}
+
+// Function to get events on a specific date
+function getEventsOnDate(date, month, year) {
+    return events.filter(function (event) {
+        let eventDate = new Date(event.date);
+        return (
+            eventDate.getDate() === date &&
+            eventDate.getMonth() === month &&
+            eventDate.getFullYear() === year
+        );
     });
-
-    eventSpan.appendChild(deleteButton);
-    return eventSpan;
 }
 
-async function deleteEvent(eventId, eventSpan) {
-    try {
-        const doc = await db.get(eventId);
-        await db.remove(doc);
-        eventSpan.remove();
-    } catch (err) {
-        console.error("Error deleting event:", err);
-    }
+// Function to check if there are events on a specific date
+function hasEventOnDate(date, month, year) {
+    return getEventsOnDate(date, month, year).length > 0;
 }
 
-// Initialize the calendar and fetch events
-renderCalendar();
-fetchEvents();
+// Function to get the number of days in a month
+function daysInMonth(iMonth, iYear) {
+    return 32 - new Date(iYear, iMonth, 32).getDate();
+}
 
-// Apply dark mode toggle
-toggleButton.addEventListener('click', () => {
-    body.classList.toggle('dark-mode');
-    if (body.classList.contains('dark-mode')) {
-        localStorage.setItem('theme', 'dark');
-    } else {
-        localStorage.setItem('theme', 'light');
-    }
-});
+// Call the showCalendar function initially to display the calendar
+showCalendar(currentMonth, currentYear);

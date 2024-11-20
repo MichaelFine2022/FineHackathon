@@ -12,6 +12,7 @@
 </head>
 
 <body>
+    
     <!-- Main wrapper for the calendar application -->
     <div class="wrapper">
         <div class="container-calendar">
@@ -86,7 +87,20 @@
                 </div>
             </div>
         </div>
+        <div id="chatbot-button">
+            <p>></p>
+        </div>
     </div>
+    <span class="chatbot-container" id="chatbot-container">
+        <div class="chat-header">Chat Assistant</div>
+        <div class="chat-screen" id="screen">
+            <!--messages here-->
+        </div>  
+        <div class="chat-input">
+            <input type="text" id="typing-window" placeholder="Type your message..." />
+            <button id="send-button">Send</button>
+        </div>
+    </span>
 
     <script src="script.js"></script>
 </body>

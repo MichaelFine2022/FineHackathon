@@ -1,6 +1,5 @@
 let events = new PouchDB('events');
 
-// letiables to store event input fields and reminder list
 let eventDateInput =
     document.getElementById("eventDate");
 let eventTitleInput =
@@ -9,7 +8,6 @@ let eventDescriptionInput =
     document.getElementById("eventDescription");
 let reminderList =
     document.getElementById("reminderList");
-let
 
 
 
@@ -55,48 +53,54 @@ function addEvent() {
 
 // Function to delete an event by ID
 function deleteEvent(eventId) {
-    // Find the index of the event with the given ID
-    let eventIndex =
-        events.findIndex((event) =>
-            event.id === eventId);
-
-    if (eventIndex !== -1) {
-        // Remove the event from the events array
-        events.splice(eventIndex, 1);
-        showCalendar(currentMonth, currentYear);
-        displayReminders();
-    }
+    events.get(eventId)
+        .then((doc) => {
+            return events.remove(doc); // Correctly pass the full document
+        })
+        .then(() => {
+            console.log("Event deleted successfully.");
+            // Update the UI
+            displayReminders();
+            showCalendar(currentMonth, currentYear);
+        })
+        .catch((err) => {
+            console.error("Error deleting event:", err);
+        });
 }
+
+
 
 // Function to display reminders
 function displayReminders() {
     reminderList.innerHTML = "";
-    for (let i = 0; i < events.length; i++) {
-        let event = events[i];
-        let eventDate = new Date(event.date);
-        if (eventDate.getMonth() ===
-            currentMonth &&
-            eventDate.getFullYear() ===
-            currentYear) {
-            let listItem = document.createElement("li");
-            listItem.innerHTML =
-                `<strong>${event.title}</strong> - 
-            ${event.description} on 
-            ${eventDate.toLocaleDateString()}`;
+    events.allDocs({include_docs:true})
+    .then(result => {
+        reminderList.innerHTML = "";
+        const allEvents = result.rows.map(row => row.doc);
+        const currentMonthEvents = allEvents.filter(event => {
+            const eventDate = new Date(event.date);
+            return (
+                eventDate.getMonth() === currentMonth &&
+                eventDate.getFullYear() === currentYear
+            );
+        });
 
-            // Add a delete button for each reminder item
-            let deleteButton =
-                document.createElement("button");
+        currentMonthEvents.forEach(event => {
+            let listItem = document.createElement("li");
+            listItem.innerHTML = `<strong>${event.title}</strong> - ${event.description} on ${new Date(event.date).toLocaleDateString()}`;
+
+            let deleteButton = document.createElement("button");
             deleteButton.className = "delete-event";
             deleteButton.textContent = "Delete";
             deleteButton.onclick = function () {
-                deleteEvent(event.id);
+                deleteEvent(event._id);
             };
 
             listItem.appendChild(deleteButton);
             reminderList.appendChild(listItem);
-        }
-    }
+        });
+    })
+    .catch(err => console.error("Error displaying reminders:", err));
 }
 
 // Function to generate a range of 
@@ -111,13 +115,13 @@ function generate_year_range(start, end) {
 }
 
 // Initialize date-related letiables
-today = new Date();
-currentMonth = today.getMonth();
-currentYear = today.getFullYear();
-selectYear = document.getElementById("year");
-selectMonth = document.getElementById("month");
+let today = new Date();
+let currentMonth = today.getMonth();
+let currentYear = today.getFullYear();
+let selectYear = document.getElementById("year");
+let selectMonth = document.getElementById("month");
 
-createYear = generate_year_range(1970, 2050);
+let createYear = generate_year_range(1970, 2050);
 
 document.getElementById("year").innerHTML = createYear;
 
@@ -195,13 +199,10 @@ function showCalendar(month, year) {
                 );
             });
 
-            // Prepare the calendar
+            
             let firstDay = new Date(year, month, 1).getDay();
             let tbl = document.getElementById("calendar-body");
-            /*let close = document.createElement('div');
-            close.id = "close-button"
-            close.textContent = 'X';
-            tbl.appendChild(close);*/
+            
             tbl.innerHTML = ""; // Clear previous content
             monthAndYear.innerHTML = months[month] + " " + year;
             selectYear.value = year;
@@ -286,8 +287,11 @@ function createEventTooltip(date, month, year) {
             ${event.description} on 
             ${eventDate.toLocaleDateString()}`;
         let eventElement = document.createElement("p");
+        let close = document.createElement("p");
+        close.id = "close-button";
         eventElement.innerHTML = eventText;
         tooltip.appendChild(eventElement);
+        tooltip.appendChild(close);
     }
     return tooltip;
 }
@@ -316,3 +320,33 @@ function daysInMonth(iMonth, iYear) {
 
 // Call the showCalendar function initially to display the calendar
 showCalendar(currentMonth, currentYear);
+
+document.getElementById("send-button").addEventListener("click", () => {
+    const input = document.getElementById("typing-window");
+    const message = input.value.trim();
+
+    if (message) {
+        displayMessage(message, "user");
+        input.value = ""; // Clear input
+        generateAssistantReply(message); // Example: Simulate assistant response
+    }
+});
+
+// Function to display a message in the chat
+function displayMessage(text, sender) {
+    const screen = document.getElementById("screen");
+    const messageElement = document.createElement("div");
+    messageElement.classList.add("chat-message", sender);
+    messageElement.textContent = text;
+
+    screen.appendChild(messageElement);
+    screen.scrollTop = screen.scrollHeight; // Scroll to the latest message
+}
+
+// Simulate Assistant Reply
+function generateAssistantReply(userMessage) {
+    setTimeout(() => {
+        const reply = `You said: "${userMessage}"`; // Example reply
+        displayMessage(reply, "assistant");
+    }, 1000);
+}

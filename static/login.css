@@ -1,0 +1,118 @@
+/* General Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #0d1b2a;
+    color: #e0e1dd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    background-color: #1b263b;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 30px;
+    font-size: 2em;
+    color: #f39c12;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #dd3719;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    background-color: #361cc7;
+    color: #e0e1dd;
+    margin-bottom: 10px;
+}
+
+input[type="text"]::placeholder,
+input[type="password"]::placeholder {
+    color: #8695a1;
+}
+
+.form-actions {
+    display: flex;
+    flex-direction: column;
+}
+
+button,
+a#signUpButton {
+    width: 100%;
+    padding: 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 1em;
+    font-weight: bold;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+button {
+    background-color:  #dd3719;
+    border: none;
+    color: #000;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #dd3719;
+}
+
+.form-actions input[type="submit"] {
+    background-color:  #dd3719;
+    color: #000;
+    font-size: 16px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.form-actions input[type="submit"]:hover {
+    background-color: #dd3719;
+}
+
+.signUpButton {
+    padding: 10px;
+}
+a#signUpButton {
+    background-color: transparent;
+    border: 2px solid #dd3719;
+    color: #dd3719;
+    padding-top:20px
+}
+
+a#signUpButton:hover {
+    background-color: #dd3719;
+    color: #000;
+}

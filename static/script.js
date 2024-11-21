@@ -467,3 +467,11 @@ function animate() {
   draw();
   requestAnimationFrame(animate);
 }
+const helpButton = document.getElementById("chatbot-button");
+helpButton.addEventListener("click", (e)=>{
+    const chatbot = document.getElementById("chatbotInterface");
+    if(helpButton.firstElementChild.textContent === ">"){chatbot.style.display = "block";helpButton.firstElementChild.textContent= "<";}
+    else{chatbot.style.display = "none";helpButton.firstElementChild.textContent = ">";}
+    
+    
+});

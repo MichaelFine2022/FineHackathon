@@ -295,6 +295,15 @@ select {
         width: 100%;
     }
 }
+#chatbot-button {
+    background: #004494;
+    color:#b3e5fc;
+    border-radius: 50%;
+    max-width: fit-content;
+    min-width: none;
+    overflow-x: hidden;
+    cursor: grab;
+}
 
 /* Chatbot Container - Phone Messenger Style */
 #animation {
@@ -314,6 +323,9 @@ select {
     padding: 20px;
     box-sizing: border-box;
     margin-top: 20px;
+    max-height: fit-content;
+    min-height: fit-content;
+    display:none;
 }
 
 #chatbotImage img {

@@ -56,7 +56,7 @@ input[type="password"] {
 
 input[type="text"]::placeholder,
 input[type="password"]::placeholder {
-    color: #8695a1;
+    color: #e0e1dd;
 }
 
 .form-actions {

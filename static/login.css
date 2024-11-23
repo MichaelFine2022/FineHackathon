@@ -116,3 +116,29 @@ a#signUpButton:hover {
     background-color: #dd3719;
     color: #000;
 }
+
+.flash-messages .alert {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+}
+
+.flash-messages .alert.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.flash-messages .alert.danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.flash-messages .alert.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.flash-messages .alert.warning {
+    background-color: #fff3cd;
+    color: #856404;
+}

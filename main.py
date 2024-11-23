@@ -39,8 +39,8 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form.get('userName')
+        password = request.form.get('password')
 
         # Check user in database
         user = User.query.filter_by(username=username).first()
@@ -54,17 +54,20 @@ def login():
 
     return render_template('login.html')
 
-@app.route('/signin', methods=['GET', 'POST'])
-def signin():
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        hashed_password = generate_password_hash(password, method='sha256')
+        
 
         # Check if user already exists
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists. Please log in.', 'warning')
-            return redirect(url_for('login'))
+        existing = User.query.filter_by(username=username).first()
+        if existing:
+            flash('Username already exists','error')
+            return redirect(url_for('signup'))
+        
+        hashed_password = generate_password_hash(password, method='sha256')
 
         # Add new user to database
         new_user = User(username=username, password=hashed_password)
@@ -79,7 +82,7 @@ def signin():
 @app.route('/calendar')
 @login_required
 def dashboard():
-    return "Welcome to your calendar!"
+    return render_template('calendar.html')
 
 @app.route('/logout')
 @login_required

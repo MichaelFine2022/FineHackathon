@@ -14,6 +14,11 @@ body {
     justify-content: space-between;
     padding:5%;
 }
+.current-day {
+    background-color: yellow;
+    font-weight: bold;
+}
+
 
 /* Wrapper and Calendar Container */
 .wrapper {
@@ -28,6 +33,7 @@ body {
 
 .container-calendar {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     width: 100%;
     max-width: 900px;
@@ -109,6 +115,11 @@ button:hover {
     background-color: #c82333;
 }
 
+input[type="text"], input[type="date"] {
+    width: 100%;
+    max-width: 300px;
+}
+
 /* Event Marker and Tooltip */
 .event-marker {
     position: relative;
@@ -150,6 +161,7 @@ button:hover {
     flex: 2;
     max-width: 700px;
 }
+
 
 .button-container-calendar {
     display: flex;

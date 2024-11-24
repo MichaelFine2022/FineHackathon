@@ -8,65 +8,161 @@ let eventDescriptionInput =
     document.getElementById("eventDescription");
 let reminderList =
     document.getElementById("reminderList");
-
+let recurringCheckbox = document.getElementById("recurring");
+let recurrenceType = document.getElementById("recurrence-type");
+recurringCheckbox.addEventListener("change", () => {
+    if (recurringCheckbox.checked) {
+        recurrenceType.style.display = "block"; // Show the recurrence dropdown
+    } else {
+        recurrenceType.style.display = "none"; // Hide the recurrence dropdown
+    }
+});
 
 
 function addEvent() {
-    // Get inputs
-    let date = eventDateInput.value;
+    let dateParts = eventDateInput.value.split("-");
+    let date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]); 
     let title = eventTitleInput.value.trim();
     let description = eventDescriptionInput.value.trim();
+    let isRecurring = document.getElementById("recurring").checked;
+    let recurrenceInterval = document.getElementById("recurrenceInterval").value;
+
 
     // Validate inputs
-    if (!date || !title) {
+    if (!eventDateInput.value || !title) {
         alert("Date and title are required to add an event.");
         return;
     }
 
-    // Create a unique document ID using date and title
-    let eventId = `event_${date}_${new Date().getTime()}`;
+    let eventId = `event_${eventDateInput.value}_${new Date().getTime()}`;
 
     // Event document structure
     let eventDoc = {
         _id: eventId, 
-        date: date,
+        date: date.toISOString(),
         title: title,
-        description: description
+        description: description,
+        isRecurring: isRecurring,
+        recurrenceInterval: recurrenceInterval // Store the recurrence interval
     };
 
-    // Add the document to PouchDB
-    events.put(eventDoc)
-        .then(() => {
-            console.log("Event added successfully:", eventDoc);
-            // Refresh calendar view and reset inputs
-            showCalendar(currentMonth, currentYear);
-            eventDateInput.value = "";
-            eventTitleInput.value = "";
-            eventDescriptionInput.value = "";
-            displayReminders();
-        })
-        .catch((error) => {
-            console.error("Error adding event:", error);
-            alert("Failed to add the event. Please try again.");
-        });
+    if(isRecurring){
+        addRecurringEvents(eventDoc);
+        showCalendar(currentMonth, currentYear);
+        eventDateInput.value = "";
+        eventTitleInput.value = "";
+        eventDescriptionInput.value = "";
+        displayReminders();
+
+    }
+    else{
+        events.put(eventDoc)
+            .then(() => {
+                console.log("Event added successfully:", eventDoc);
+                showCalendar(currentMonth, currentYear);
+                eventDateInput.value = "";
+                
+                eventTitleInput.value = "";
+                
+                eventDescriptionInput.value = "";
+
+                displayReminders();
+                
+            })
+            .catch((error) => {
+                console.error("Error adding event:", error);
+                alert("Failed to add the event. Please try again.");
+            });
+    }
 }
 
-// Function to delete an event by ID
-function deleteEvent(eventId) {
-    events.get(eventId)
-        .then((doc) => {
-            return events.remove(doc); // Correctly pass the full document
-        })
-        .then(() => {
-            console.log("Event deleted successfully.");
-            // Update the UI
-            displayReminders();
-            showCalendar(currentMonth, currentYear);
-        })
-        .catch((err) => {
-            console.error("Error deleting event:", err);
-        });
+async function addRecurringEvents(eventDoc) {
+    const { recurrenceInterval, date } = eventDoc;
+    const startDate = new Date(eventDoc.date);
+    const futureEvents = [];
+    
+    for (let i = 0; i <= 32; i++) {
+        let newDate = new Date(startDate);
+
+        switch (recurrenceInterval) {
+            case "daily":
+                newDate.setDate(startDate.getDate() + i);
+                break;
+            case "weekly":
+                newDate.setDate(startDate.getDate() + i * 7);
+                break;
+            case "monthly":
+                newDate.setMonth(startDate.getMonth() + i);
+                break;
+            default:
+                console.error("Invalid recurrence interval:", recurrenceInterval);
+                return;
+        }
+
+        if (newDate.getMonth() !== startDate.getMonth() + i) {
+            continue;
+        }
+
+        const eventId = `${eventDoc._id}_${newDate.toISOString().split("T")[0]}`;
+        futureEvents.push({
+            ...eventDoc,
+            _id: eventId,
+            date: newDate.toISOString(),
+        }); 
+    }
+
+    if (futureEvents.length > 0) {
+        try {
+            const result = await events.bulkDocs(futureEvents);
+            console.log("Recurring events added:", result);
+        } catch (error) {
+            console.error("Error adding recurring events:", error);
+        }
+    } else {
+        console.warn("No valid recurring events to add.");
+    }
 }
+
+function deleteEvent(eventId) {
+    if (confirm("Are you sure you want to delete this event?")) {
+        events.get(eventId)
+            .then(doc => events.remove(doc))
+            .then(() => {
+                console.log("Event deleted successfully.");
+                displayReminders();
+                showCalendar(currentMonth, currentYear);
+            })
+            .catch(err => console.error("Error deleting event:", err));
+    }
+}
+document.getElementById("deleteAllButton").addEventListener("click",function() {
+    if (confirm("Are you sure you want to delete all events? This action cannot be undone.")) {
+        events.allDocs({ include_docs: true })
+            .then(result => {
+                const deleteDocs = result.rows.map(row => {
+                    return { 
+                        _id: row.doc._id, 
+                        _rev: row.doc._rev, 
+                        _deleted: true 
+                    };
+                });
+
+                return events.bulkDocs(deleteDocs);
+            })
+            .then(() => {
+                console.log("All events deleted successfully.");
+                alert("All events have been deleted.");
+                // Refresh reminders and calendar view
+                displayReminders();
+                showCalendar(currentMonth, currentYear);
+            })
+            .catch(err => {
+                console.error("Error deleting all events:", err);
+                alert("Failed to delete all events. Please try again.");
+            });
+    }
+})
+
 
 
 
@@ -77,6 +173,7 @@ function displayReminders() {
     .then(result => {
         reminderList.innerHTML = "";
         const allEvents = result.rows.map(row => row.doc);
+        console.log("Events for reminders:", allEvents);
         const currentMonthEvents = allEvents.filter(event => {
             const eventDate = new Date(event.date);
             return (
@@ -189,8 +286,38 @@ function showCalendar(month, year) {
     events.allDocs({ include_docs: true })
         .then((result) => {
             const allEvents = result.rows.map(row => row.doc);
+            let recurringEvents = allEvents.filter(event => event.isRecurring);
+            let futureEvents = [];
+            recurringEvents.forEach(event => {
+                const recurrenceInterval = event.recurrenceInterval; // 'daily', 'weekly', etc.
+                const startDate = new Date(event.date);
 
-            // Filter events for the current month and year
+                // Calculate the next occurrences based on the interval
+                let newDate = new Date(startDate);
+
+                // Generate future occurrences within the current month
+                for (let i = 1; i <= 31; i++) { // Assuming up to 31 occurrences to check
+                    if (newDate.getMonth() === month && newDate.getFullYear() === year) {
+                        let futureEvent = {
+                            ...event,
+                            _id: `${event._id}_${i}`,  // Create a unique ID for each occurrence
+                            date: newDate.toISOString()
+                        };
+                        futureEvents.push(futureEvent);
+                    }
+
+                    // Update the date based on the recurrence interval
+                    if (recurrenceInterval === 'daily') {
+                        newDate.setDate(newDate.getDate() + 1);
+                    } else if (recurrenceInterval === 'weekly') {
+                        newDate.setDate(newDate.getDate() + 7);
+                    } else if (recurrenceInterval === 'monthly') {
+                        newDate.setMonth(newDate.getMonth() + 1);
+                    }
+                }
+            });
+            allEvents.push(...futureEvents);
+
             const eventsForMonth = allEvents.filter(event => {
                 const eventDate = new Date(event.date);
                 return (
@@ -472,6 +599,4 @@ helpButton.addEventListener("click", (e)=>{
     const chatbot = document.getElementById("chatbotInterface");
     if(helpButton.firstElementChild.textContent === ">"){chatbot.style.display = "block";helpButton.firstElementChild.textContent= "<";}
     else{chatbot.style.display = "none";helpButton.firstElementChild.textContent = ">";}
-    
-    
 });

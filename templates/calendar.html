@@ -27,11 +27,19 @@
                     <input type="text"
                         id="eventDescription"
                         placeholder="Event Description">
-                    <input type="check" placeholder="Recurring">
-                    <button id="addEvent" onclick="addEvent()">
-                        Add
-                    </button>
+                    <input type="checkbox" id="recurring" name="recurring">
+                    <label for="recurring">Recurring</label>
+                    <div id="recurrence-type" style="display:none;">
+                      <label for="recurrenceInterval">Recurrence Interval:</label>
+                      <select id="recurrenceInterval">
+                          <option value="daily">Daily</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="monthly">Monthly</option>
+                      </select>
+                    </div>
+                    <button id="addEvent" title="Click to add the event" onclick="addEvent()">Add</button>
                 </div>
+                <button id="deleteAllButton">Delete All Events</button>
                 <div id="reminder-section">
                     <h3>Reminders</h3>
                     <!-- List to display reminders -->
@@ -89,7 +97,7 @@
             </div>
         </div>
         <div id="chatbot-button">
-            <p>></p>
+            <p> > </p>
         </div>
     </div>
     <div id="chatbotInterface">
@@ -101,7 +109,7 @@
             <!-- msg-header section starts -->
             <div class="msg-header">
               <div class="container1">
-                <img src="user1.png" class="msgimg" />
+                <img src="static/user1.png" class="msgimg" />
                 <div class="active">
                   <p>Username</p>
                 </div>
@@ -119,7 +127,7 @@
       
                     <div class="received-chats">
                       <div class="received-chats-img">
-                        <img src="user1.png" />
+                        <img src="static/user1.png" />
                       </div>
                       <div class="received-msg" id="messageInbox">
                         <div class="received-msg-inbox">
@@ -131,7 +139,7 @@
 
                     <div class="outgoing-chats">
                       <div class="outgoing-chats-img">
-                        <img src="user2.png" />
+                        <img src="static/user2.png" />
                       </div>
                       <div class="outgoing-msg" id="outgoingMessageDirectory">
                         <div class="outgoing-chats-msg">

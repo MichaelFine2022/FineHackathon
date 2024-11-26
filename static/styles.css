@@ -52,8 +52,8 @@ body {
 #event-section, #reminder-section {
     margin-bottom: 30px;
     padding: 10px;
-    background: #ffecb3; /* Light yellow background */
-    border: 1px solid #ffcc00; /* Yellow border */
+    background: #ffecb3; 
+    border: 1px solid #ffcc00; 
     border-radius: 10px;
 }
 

@@ -64,13 +64,14 @@ async function addRecurringEvents(eventDoc) {
     const { recurrenceInterval, date } = eventDoc;
     const startDate = new Date(eventDoc.date);
     const futureEvents = [];
-    const maxRecurringEvents = 32;
+    const maxRecurringEvents = 32; // Maximum events to generate
     let recurrenceCount = 0;
 
     let recurrenceType = eventDoc.recurrenceInterval;
     let newEventDate = new Date(startDate);
-    
+
     while (recurrenceCount < maxRecurringEvents) {
+        const isFirstRecurring = recurrenceCount === 0; // Only the first event is shown in reminders
         let eventId = `event_${newEventDate.toISOString()}_${new Date().getTime()}`;
         let recurringEventDoc = {
             _id: eventId,
@@ -78,17 +79,18 @@ async function addRecurringEvents(eventDoc) {
             title: eventDoc.title,
             description: eventDoc.description,
             isRecurring: true,
-            recurrenceInterval: recurrenceType
+            isFirstRecurring, // Flag to identify the first occurrence
+            recurrenceInterval: recurrenceType,
         };
 
         futureEvents.push(recurringEventDoc);
 
         // Modify the date based on the recurrence type
-        if (recurrenceType === 'daily') {
+        if (recurrenceType === "daily") {
             newEventDate.setDate(newEventDate.getDate() + 1);
-        } else if (recurrenceType === 'weekly') {
+        } else if (recurrenceType === "weekly") {
             newEventDate.setDate(newEventDate.getDate() + 7);
-        } else if (recurrenceType === 'monthly') {
+        } else if (recurrenceType === "monthly") {
             newEventDate.setMonth(newEventDate.getMonth() + 1);
         }
 
@@ -105,6 +107,7 @@ async function addRecurringEvents(eventDoc) {
         alert("Failed to add recurring events. Please try again.");
     }
 }
+
 
 function resetInputFields() {
     eventTitleInput.value = "";
@@ -171,18 +174,41 @@ function showCalendar(month, year) {
     });
 }
 
-function deleteEvent(eventId) {
-    if (confirm("Are you sure you want to delete this event?")) {
-        events.get(eventId)
-            .then(doc => events.remove(doc))
-            .then(() => {
-                console.log("Event deleted successfully.");
-                displayReminders();
-                showCalendar(currentMonth, currentYear);
-            })
-            .catch(err => console.error("Error deleting event:", err));
+async function deleteEvent(eventId) {
+    try {
+        // Retrieve the event to find its recurrence details
+        const event = await events.get(eventId);
+
+        if (event.isRecurring) {
+            // Delete all events with the same recurrenceInterval and start date
+            const allEvents = await events.allDocs({ include_docs: true });
+            const relatedEvents = allEvents.rows
+                .map((row) => row.doc)
+                .filter(
+                    (doc) =>
+                        doc.recurrenceInterval === event.recurrenceInterval &&
+                        new Date(doc.date).toISOString() >= new Date(event.date).toISOString()
+                );
+
+            await events.bulkDocs(
+                relatedEvents.map((relatedEvent) => ({
+                    ...relatedEvent,
+                    _deleted: true,
+                }))
+            );
+        } else {
+            // Delete single event
+            await events.remove(event);
+        }
+
+        displayReminders();
+        showCalendar(currentMonth, currentYear);
+    } catch (error) {
+        console.error("Error deleting event:", error);
+        alert("Failed to delete event. Please try again.");
     }
 }
+
 
 document.getElementById("deleteAllButton").addEventListener("click",function() {
     if (confirm("Are you sure you want to delete all events? This action cannot be undone.")) {
@@ -213,48 +239,37 @@ document.getElementById("deleteAllButton").addEventListener("click",function() {
 })
 
 // Function to display reminders
-function displayReminders() {
-    reminderList.innerHTML = ''; 
+async function displayReminders() {
+    try {
+        const allEvents = await events.allDocs({ include_docs: true });
+        const reminderList = document.getElementById("reminderList");
+        reminderList.innerHTML = ""; // Clear existing reminders
 
-    events.allDocs({ include_docs: true }).then(result => {
-        result.rows.forEach(row => {
-            let eventDoc = row.doc;
+        // Filter to only include first recurring or non-recurring events
+        const reminders = allEvents.rows
+            .map((row) => row.doc)
+            .filter((doc) => !doc.isRecurring || doc.isFirstRecurring);
 
-            if (eventDoc.isRecurring && eventDoc.date) {
-                let eventDate = new Date(eventDoc.date);
+        reminders.forEach((event) => {
+            const listItem = document.createElement("li");
+            listItem.dataset.eventId = event._id;
 
-                // Create a new reminder item
-                let reminderItem = document.createElement("div");
-                reminderItem.classList.add("reminder");
+            listItem.innerHTML = `
+                <strong>${event.title}</strong> - ${event.description} on ${new Date(
+                event.date
+            ).toLocaleDateString()}
+                <button class="delete-event" onclick="deleteEvent('${event._id}')">
+                    Delete
+                </button>
+            `;
 
-                let deleteButton = document.createElement("button");
-                deleteButton.textContent = "Delete";
-                deleteButton.classList.add("delete-event");
-                
-                let formattedDate = `${eventDate.toLocaleDateString()} ${eventDate.toLocaleTimeString()}`;
-
-                // Set the reminder content
-                reminderItem.innerHTML = `
-                    <strong>${eventDoc.title}</strong><br>
-                    <span class="reminder-date">${formattedDate}</span><br>
-                    <span class="reminder-description">${eventDoc.description}</span>
-                `;
-                
-                // Append the reminder to the list
-                reminderList.appendChild(reminderItem);
-                reminderItem.appendChild(deleteButton);
-
-                deleteButton.addEventListener("click", () => {
-                    deleteEvent(eventDoc._id); // Pass the event ID to the delete function
-                    reminderItem.remove(); // Remove the reminder from the display immediately
-                });
-
-            }
+            reminderList.appendChild(listItem);
         });
-    }).catch(error => {
-        console.error("Error fetching reminders:", error);
-    });
+    } catch (error) {
+        console.error("Error displaying reminders:", error);
+    }
 }
+
 
 // Function to generate a range of 
 // years for the year select input

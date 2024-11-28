@@ -335,119 +335,45 @@ select {
     padding: 20px;
     box-sizing: border-box;
     margin-top: 20px;
-    display: none;
-    overflow-y: auto;
-    height: 500px; 
+    max-height: fit-content;
+    min-height: fit-content;
+    display:none;
+}
+
+#chatbotImage img {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
 }
 
 /* Chat and Response Styling */
 #chatbotResponses {
-    display: flex;
-    flex-direction: column;
-    gap: 15px; /* Space between messages */
-    margin-top: 10px;
+    margin-top: 20px;
 }
 
-/* Wrapper for messages and user profile */
-.messageWrapper {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px; /* Space between the image and the message */
-}
-
-/* User's Profile Image */
-.userImage {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%; /* Circular image */
-    object-fit: cover; /* Ensure the image covers the container */
-}
-
-/* Human's Message Styling (right-aligned) */
-#humanResponse {
-    max-width: 80%; /* Limit width to make messages look like speech bubbles */
-    padding: 12px;
-    margin-bottom: 10px;
-    font-size: 16px;
-    box-sizing: border-box;
-    border-radius: 12px;
-    word-wrap: break-word;
-    line-height: 1.5;
-    position: relative;
-    background-color: #007bff; /* Blue for user messages */
-    color: #ffffff;
-    align-self: flex-end; /* Align to the right */
-    border-top-right-radius: 0; /* Remove top right corner rounding */
-    border-bottom-left-radius: 0; /* Remove bottom left corner rounding */
-}
-
-/* Chatbot's Message Styling (left-aligned) */
+#humanResponse,
 #chatbotResponse {
-    max-width: 80%; /* Limit width to make messages look like speech bubbles */
+    width: 100%;
     padding: 12px;
-    margin-bottom: 10px;
+    margin-top: 10px;
+    border: 1px solid #cccccc;
+    border-radius: 8px;
     font-size: 16px;
     box-sizing: border-box;
-    border-radius: 12px;
-    word-wrap: break-word;
-    line-height: 1.5;
-    position: relative;
-    background-color: #f1f1f1; /* Light gray for bot messages */
-    color: #333333;
-    align-self: flex-start; /* Align to the left */
-    border-top-left-radius: 0; /* Remove top left corner rounding */
-    border-bottom-right-radius: 0; /* Remove bottom right corner rounding */
 }
 
-/* Styling for the speech bubble tail */
-#humanResponse::after,
-#chatbotResponse::after {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-}
-
-/* Human's message tail */
-#humanResponse::after {
-    border-top: 10px solid #007bff;
-    right: -10px; /* Tail position for the human message */
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-/* Chatbot's message tail */
-#chatbotResponse::after {
-    border-top: 10px solid #f1f1f1;
-    left: -10px; /* Tail position for the chatbot message */
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-/* Focus style for user input */
 #humanResponse:focus {
-    border-color: #0056b3;
+    border-color: #007bff;
     outline: none;
-    box-shadow: 0 0 5px rgba(0, 86, 179, 0.5);
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Optional Scrollbar Styling for Mobile */
-#chatbotInterface::-webkit-scrollbar {
-    width: 8px;
+#chatbotResponse {
+    background-color: #f7f7f7;
+    cursor: not-allowed;
+    color: #555555;
 }
-
-#chatbotInterface::-webkit-scrollbar-thumb {
-    background-color: #888;
-    border-radius: 4px;
-}
-
-#chatbotInterface::-webkit-scrollbar-thumb:hover {
-    background-color: #555;
-}
-
 
 /* Plan Section Styling */
 #plan {

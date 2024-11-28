@@ -54,7 +54,15 @@ function displayBotMessage(message) {
         //appends the div with the paragraph to the outgoing chat messages div 
         element.appendChild(newDiv)
 }
-
+function addEvent({name, date, time}){
+    if (!name || !date || !time) {
+        return "Please provide all details for the event.";
+    }
+    const event = { name, date, time, id: Date.now() };
+    return db.put(event)
+        .then(() => `Event '${name}' added on ${date} at ${time}.`)
+        .catch(error => `Error adding event: ${error.message}`);
+}
 function addEvent() {
     let dateParts = eventDateInput.value.split("-");
     let date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
@@ -212,6 +220,14 @@ function showCalendar(month, year) {
     });
 }
 
+function deleteEvent({ id }) {
+    if (!id) return "Please specify the event ID to delete.";
+    return db.get(id)
+        .then(doc => db.remove(doc))
+        .then(() => "Event deleted successfully.")
+        .catch(error => `Error deleting event: ${error.message}`);
+}
+
 async function deleteEvent(eventId) {
     try {
         // Retrieve the event to find its recurrence details
@@ -246,6 +262,31 @@ async function deleteEvent(eventId) {
         alert("Failed to delete event. Please try again.");
     }
 }
+
+function modifyEvent({ id, name, date, time }) {
+    if (!id) return "Please specify the event ID to modify.";
+    return db.get(id)
+        .then(doc => {
+            doc.name = name || doc.name;
+            doc.date = date || doc.date;
+            doc.time = time || doc.time;
+            return db.put(doc);
+        })
+        .then(() => "Event updated successfully.")
+        .catch(error => `Error updating event: ${error.message}`);
+}
+
+function viewEvent({ date }) {
+    return db.allDocs({ include_docs: true })
+        .then(result => {
+            const events = result.rows.map(row => row.doc);
+            const filtered = events.filter(event => event.date === date);
+            if (filtered.length === 0) return `No events found for ${date}.`;
+            return filtered.map(event => `${event.name} at ${event.time}`).join("\n");
+        })
+        .catch(error => `Error retrieving events: ${error.message}`);
+}
+
 
 document.getElementById("deleteAllButton").addEventListener("click",function() {
     if (confirm("Are you sure you want to delete all events? This action cannot be undone.")) {
@@ -714,38 +755,64 @@ let history = [
     { role: "system", content: process.env.specialPrompt },
 ]
 function sendMessage(userInput) {
-    history.push({role:'user', content:userInput});
-    if (userInput) {
-        displayUserMessage(userInput);  
-        document.getElementById("typedText").value = '';  
+    if (!userInput.trim()) {
+        displayBotMessage("Please enter a valid message.");
+        return;
+    }
 
+    // Add user's message to history and display it
+    history.push({ role: 'user', content: userInput });
+    displayUserMessage(userInput);  
+    document.getElementById("typedText").value = '';
 
-        const requestPayload = {
-            model: "smollm2:135m", 
-            messages: history,
-        };
+    const requestPayload = {
+        model: "smollm2:135m", 
+        messages: history,
+    };
 
-        // Sends the request to the chatbot server
-        fetch('http://localhost:3000/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'prompt': process.env.specialPrompt
-            },
-            body: JSON.stringify(requestPayload),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                throw new Error(data.error);
-            }
-            // Displays the response
-            displayBotMessage(data.response);
-            history.push({role:'system', content:data.response});
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            displayBotMessage(`Sorry, there was an error: ${error.message}`);
-        });
+    // Send request to chatbot server
+    fetch('http://localhost:3000/chat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'prompt': process.env.specialPrompt, // Optional, ensure your backend supports this
+        },
+        body: JSON.stringify(requestPayload),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        // Display bot's response
+        displayBotMessage(data.response);
+        history.push({ role: 'system', content: data.response });
+
+        // Handle intents if provided
+        if (data.queryResult && data.queryResult.intent) {
+            const intent = data.queryResult.intent.displayName;
+            const parameters = data.queryResult.parameters;
+            intentHandler(intent, parameters);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        displayBotMessage(`Sorry, there was an error: ${error.message}`);
+    });
+}
+
+function intentHandler(intent, parameters) {
+    switch (intent) {
+        case "add_event":
+            return addEvent(parameters);
+        case "delete_event":
+            return deleteEvent(parameters);
+        case "modify_event":
+            return modifyEvent(parameters);
+        case "view_event":
+            return viewEvent(parameters);
+        default:
+            return "I'm not sure how to handle that request.";
     }
 }

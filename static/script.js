@@ -1,3 +1,5 @@
+const { response } = require("express");
+
 let events = new PouchDB('events');
 
 let eventDateInput = document.getElementById("eventDate");
@@ -14,7 +16,44 @@ recurringCheckbox.addEventListener("change", () => {
         recurrenceType.style.display = "none"; // Hide the recurrence dropdown
     }
 });
+function displayUserMessage(message) {
+    responses.push(message);
+        document.getElementById(`typedText`).value = "";
+        //creates a text node using that text
+        let node = document.createTextNode(message)
+        //creates a div with the right class
+        let newDiv = document.createElement("div")
+        newDiv.setAttribute("class", "outgoing-chats-msg")
+        //creates a new paragraph and appends the node to it
+        let newElement = document.createElement("p")         
+        newElement.appendChild(node)
+        //appends the p element to the div 
+        newDiv.appendChild(newElement)
+        //gets the div to append to
+        let element = document.getElementById(`messageInbox`)
+        //appends the div with the paragraph to the outgoing chat messages div 
+        element.appendChild(newDiv)
+    
+}
 
+function displayBotMessage(message) {
+    responses.push(message);
+        document.getElementById(`typedText`).value = "";
+        //creates a text node using that text
+        let node = document.createTextNode(message)
+        //creates a div with the right class
+        let newDiv = document.createElement("div")
+        newDiv.setAttribute("class", "received-msg-inbox")
+        //creates a new paragraph and appends the node to it
+        let newElement = document.createElement("p")         
+        newElement.appendChild(node)
+        //appends the p element to the div 
+        newDiv.appendChild(newElement)
+        //gets the div to append to
+        let element = document.getElementById(`messageInbox`)
+        //appends the div with the paragraph to the outgoing chat messages div 
+        element.appendChild(newDiv)
+}
 
 function addEvent() {
     let dateParts = eventDateInput.value.split("-");
@@ -107,7 +146,6 @@ async function addRecurringEvents(eventDoc) {
         alert("Failed to add recurring events. Please try again.");
     }
 }
-
 
 function resetInputFields() {
     eventTitleInput.value = "";
@@ -209,7 +247,6 @@ async function deleteEvent(eventId) {
     }
 }
 
-
 document.getElementById("deleteAllButton").addEventListener("click",function() {
     if (confirm("Are you sure you want to delete all events? This action cannot be undone.")) {
         events.allDocs({ include_docs: true })
@@ -238,7 +275,6 @@ document.getElementById("deleteAllButton").addEventListener("click",function() {
     }
 })
 
-// Function to display reminders
 async function displayReminders() {
     try {
         const allEvents = await events.allDocs({ include_docs: true });
@@ -270,9 +306,6 @@ async function displayReminders() {
     }
 }
 
-
-// Function to generate a range of 
-// years for the year select input
 function generate_year_range(start, end) {
     let years = "";
     for (let year = start; year <= end; year++) {
@@ -282,7 +315,6 @@ function generate_year_range(start, end) {
     return years;
 }
 
-// Initialize date-related letiables
 let today = new Date();
 let currentMonth = today.getMonth();
 let currentYear = today.getFullYear();
@@ -500,8 +532,6 @@ function showCalendar(month, year) {
         }   
 }
 
-
-
 // Function to create an event tooltip
 function createEventTooltip(date, month, year) {
     let tooltip = document.createElement("div");
@@ -554,29 +584,9 @@ let sendBtn = document.getElementById(`sendButton`);
 
 if(sendBtn){
     sendBtn.addEventListener("click", function(){
-        //gets and resets the sent text
         let sentText = document.getElementById(`typedText`).value;
-        responses.push(sentText);
-        document.getElementById(`typedText`).value = "";
-        //creates a text node using that text
-        let node = document.createTextNode(sentText)
-        //creates a div with the right class
-        let newDiv = document.createElement("div")
-        newDiv.setAttribute("class", "outgoing-chats-msg")
-        //creates a new paragraph and appends the node to it
-        let newElement = document.createElement("p")         
-        newElement.appendChild(node)
-        //appends the p element to the div 
-        newDiv.appendChild(newElement)
-        //gets the div to append to
-        let element = document.getElementById(`messageInbox`)
-        //appends the div with the paragraph to the outgoing chat messages div 
-        element.appendChild(newDiv)
-
-        var sendData = {
-          "text": sentText
-        }
-    })
+        sendMessage(sentText); 
+    });
 }
 
 function sendMessageToUser(textToSend){
@@ -700,3 +710,42 @@ helpButton.addEventListener("click", (e)=>{
     if(helpButton.firstElementChild.textContent === ">"){chatbot.style.display = "block";helpButton.firstElementChild.textContent= "<";}
     else{chatbot.style.display = "none";helpButton.firstElementChild.textContent = ">";}
 });
+let history = [
+    { role: "system", content: process.env.specialPrompt },
+]
+function sendMessage(userInput) {
+    history.push({role:'user', content:userInput});
+    if (userInput) {
+        displayUserMessage(userInput);  
+        document.getElementById("typedText").value = '';  
+
+
+        const requestPayload = {
+            model: "smollm2:135m", 
+            messages: history,
+        };
+
+        // Sends the request to the chatbot server
+        fetch('http://localhost:3000/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'prompt': process.env.specialPrompt
+            },
+            body: JSON.stringify(requestPayload),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            // Displays the response
+            displayBotMessage(data.response);
+            history.push({role:'system', content:data.response});
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            displayBotMessage(`Sorry, there was an error: ${error.message}`);
+        });
+    }
+}

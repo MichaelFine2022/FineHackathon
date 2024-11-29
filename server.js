@@ -10,7 +10,7 @@ const ollama = new Ollama({
 });
 
 let history = [
-    {role: "system", content: process.env.specialPrompt },
+    {role: "system", content: process.env.specialPrompt},
 ]
 
 app.use(cors());

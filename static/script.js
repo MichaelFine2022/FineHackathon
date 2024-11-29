@@ -224,9 +224,9 @@ function showCalendar(month, year) {
     });
 }
 
-function deleteEvent({ id }) {
+async function deleteEvent({ id }) {
     if (!id) return "Please specify the event ID to delete.";
-    return db.get(id)
+    return await db.get(id)
         .then(doc => db.remove(doc))
         .then(() => "Event deleted successfully.")
         .catch(error => `Error deleting event: ${error.message}`);
@@ -760,6 +760,25 @@ function sendMessage(userInput) {
     if (!userInput.trim()) {
         displayBotMessage("Please enter a valid message.");
         return;
+    }
+    if(userInput.toLowerCase() == "add an event"){
+        const eventName = prompt("What is the event name?");
+        const eventDate = prompt("What is the event date (YYYY-MM-DD)?");
+        const eventTime = prompt("What is the event time (HH:mm)?");
+
+        if (eventName && eventDate && eventTime) {
+            const event = {
+                name: eventName,
+                date: new Date(eventDate),
+                time: eventTime,
+            };
+            addEvent(event);
+            displayBotMessage(`Event "${eventName}" added successfully for ${eventDate} at ${eventTime}.`);
+            return; // Avoid sending the hardcoded input to the chatbot server
+        } else {
+            displayBotMessage("Failed to add event. Please provide all details.");
+            return;
+        }
     }
 
     

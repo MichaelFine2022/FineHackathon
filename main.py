@@ -1,10 +1,18 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_user, logout_user, login_required, UserMixin
+import base64
+from PIL import Image
+from io import BytesIO
+import os
+import requests
 
 app = Flask(__name__)
 app.secret_key = 'secret_key'
+SAVE_DIR = 'notes'
+os.makedirs(SAVE_DIR, exist_ok=True)
+GEMINI_API_URL = 'https://api.gemini.com/v1/recognize'
 
 # Configure the database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # SQLite for simplicity
@@ -35,6 +43,11 @@ def load_user(user_id):
 @app.route('/')
 def home():
     return redirect(url_for('login'))
+
+@app.route('/math', methods=['GET'])
+@login_required
+def toMath():
+    return render_template('math.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -90,6 +103,28 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
+
+@app.route('/save_note', methods=['POST'])
+def save_note():
+    data = request.get_json()
+    image_data = data.get('image').split(',')[1]
+    image = Image.open(BytesIO(base64.b64decode(image_data)))
+    filename = os.path.join(SAVE_DIR, 'note.png')
+    image.save(filename)
+    return jsonify({'message': 'Note saved successfully', 'path': filename})
+
+@app.route('/recognize_math', methods=['POST'])
+def recognize_math():
+    data = request.get_json()
+    image_data = data.get('image').split(',')[1]  # Base64 part of image
+    response = requests.post(
+        GEMINI_API_URL,
+        headers={'Authorization': f'Bearer {GEMINI_API_KEY}'},
+        json={'image': image_data}
+    )
+    result = response.json()
+    return jsonify({'result': result.get('recognized_equation', 'No result')})
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,213 @@
+/* Global settings */
+:root {
+    --border: #e0e0e0;
+    --input: #f0f0f0;
+    --ring: #cccccc;
+    --background: #ffffff;
+    --foreground: #333333;
+    --primary: #0070f3;
+    --primary-foreground: #ffffff;
+    --secondary: #6c757d;
+    --secondary-foreground: #ffffff;
+    --destructive: #e53e3e;
+    --destructive-foreground: #ffffff;
+    --muted: #f7fafc;
+    --muted-foreground: #718096;
+    --accent: #38b2ac;
+    --accent-foreground: #ffffff;
+    --popover: #ffffff;
+    --popover-foreground: #333333;
+    --card: #ffffff;
+    --card-foreground: #333333;
+    --radius: 8px;
+  
+    --chart-1: #f8b195;
+    --chart-2: #f67280;
+    --chart-3: #c06c84;
+    --chart-4: #6c5b7b;
+    --chart-5: #355c7d;
+
+    --color-black: #000000;
+    --color-white: #ffffff;
+    --color-red: #ee3333;
+    --color-pink: #e64980;
+    --color-purple: #be4bdb;
+    --color-brown: #893200;
+    --color-blue: #228be6;
+    --color-dark-blue: #3333ee;
+    --color-green: #40c057;
+    --color-dark-green: #00aa00;
+    --color-yellow: #fab005;
+    --color-orange: #fd7e14;
+  }
+  
+  .dark {
+    --background: #333333;
+    --foreground: #ffffff;
+    --card: #444444;
+    --card-foreground: #ffffff;
+    --popover: #444444;
+    --popover-foreground: #ffffff;
+    --primary: #82c91e;
+    --primary-foreground: #000000;
+    --secondary: #6c757d;
+    --secondary-foreground: #ffffff;
+    --destructive: #ff6b6b;
+    --destructive-foreground: #ffffff;
+    --muted: #1c1c1c;
+    --muted-foreground: #a8a8a8;
+    --accent: #51cf66;
+    --accent-foreground: #000000;
+  }
+  
+  /* Container styles */
+  .container {
+    margin-left: auto;
+    margin-right: auto;
+    padding: 2rem;
+    width: 100%;
+  }
+  
+  @media (min-width: 1400px) {
+    .container {
+      max-width: 1400px;
+    }
+  }
+  
+  /* Border Radius */
+  .border-radius-lg {
+    border-radius: var(--radius);
+  }
+  
+  .border-radius-md {
+    border-radius: calc(var(--radius) - 2px);
+  }
+  
+  .border-radius-sm {
+    border-radius: calc(var(--radius) - 4px);
+  }
+  
+  /* Animations */
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+  
+  .accordion-down {
+    animation: accordion-down 0.2s ease-out;
+  }
+  
+  .accordion-up {
+    animation: accordion-up 0.2s ease-out;
+  }
+  
+  /* Components */
+  .border {
+    border-color: hsl(var(--border));
+  }
+  
+  .input {
+    background-color: hsl(var(--input));
+  }
+  
+  .ring {
+    box-shadow: 0 0 0 2px hsl(var(--ring));
+  }
+  
+  .background {
+    background-color: hsl(var(--background));
+  }
+  
+  .foreground {
+    color: hsl(var(--foreground));
+  }
+  
+  .primary {
+    color: hsl(var(--primary));
+  }
+  
+  .primary-foreground {
+    color: hsl(var(--primary-foreground));
+  }
+  
+  .secondary {
+    color: hsl(var(--secondary));
+  }
+  
+  .secondary-foreground {
+    color: hsl(var(--secondary-foreground));
+  }
+  
+  .destructive {
+    color: hsl(var(--destructive));
+  }
+  
+  .destructive-foreground {
+    color: hsl(var(--destructive-foreground));
+  }
+  
+  .muted {
+    color: hsl(var(--muted));
+  }
+  
+  .muted-foreground {
+    color: hsl(var(--muted-foreground));
+  }
+  
+  .accent {
+    color: hsl(var(--accent));
+  }
+  
+  .accent-foreground {
+    color: hsl(var(--accent-foreground));
+  }
+  
+  .popover {
+    background-color: hsl(var(--popover));
+  }
+  
+  .popover-foreground {
+    color: hsl(var(--popover-foreground));
+  }
+  
+  .card {
+    background-color: hsl(var(--card));
+  }
+  
+  .card-foreground {
+    color: hsl(var(--card-foreground));
+  }
+  
+  /* Add any additional custom styles below this line */
+  canvas {
+    border: 1px solid var(--border);
+    margin: 1rem auto;
+    background-color: var(--background);
+  }
+  
+  button {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+  
+  button:hover {
+    background-color: var(--primary-foreground);
+    color: var(--primary);
+  }
+  

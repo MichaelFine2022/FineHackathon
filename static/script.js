@@ -1,5 +1,3 @@
-const { response } = require("express");
-
 let events = new PouchDB('events');
 
 let eventDateInput = document.getElementById("eventDate");
@@ -16,6 +14,9 @@ recurringCheckbox.addEventListener("change", () => {
         recurrenceType.style.display = "none"; // Hide the recurrence dropdown
     }
 });
+
+
+
 function displayUserMessage(message) {
     responses.push(message);
         document.getElementById(`typedText`).value = "";
@@ -54,14 +55,17 @@ function displayBotMessage(message) {
         //appends the div with the paragraph to the outgoing chat messages div 
         element.appendChild(newDiv)
 }
-function addEvent({name, date, time}){
+function addEvent({name, date, time, description, isRecurring, recurrenceInterval}){
     if (!name || !date || !time) {
         return "Please provide all details for the event.";
     }
-    const event = { name, date, time, id: Date.now() };
-    return db.put(event)
+    const event = { name, date, time, id: Date.now(), description:description, isRecurring:isRecurring,recurrenceInterval:recurrenceInterval};
+    if(isRecurring){addRecurringEvents(event);}
+    else{
+        return db.put(event)
         .then(() => `Event '${name}' added on ${date} at ${time}.`)
         .catch(error => `Error adding event: ${error.message}`);
+    }
 }
 function addEvent() {
     let dateParts = eventDateInput.value.split("-");
@@ -111,7 +115,7 @@ async function addRecurringEvents(eventDoc) {
     const { recurrenceInterval, date } = eventDoc;
     const startDate = new Date(eventDoc.date);
     const futureEvents = [];
-    const maxRecurringEvents = 32; // Maximum events to generate
+    const maxRecurringEvents = 32; // Maximum events
     let recurrenceCount = 0;
 
     let recurrenceType = eventDoc.recurrenceInterval;
@@ -751,23 +755,20 @@ helpButton.addEventListener("click", (e)=>{
     if(helpButton.firstElementChild.textContent === ">"){chatbot.style.display = "block";helpButton.firstElementChild.textContent= "<";}
     else{chatbot.style.display = "none";helpButton.firstElementChild.textContent = ">";}
 });
-let history = [
-    { role: "system", content: process.env.specialPrompt },
-]
+
 function sendMessage(userInput) {
     if (!userInput.trim()) {
         displayBotMessage("Please enter a valid message.");
         return;
     }
 
-    // Add user's message to history and display it
-    history.push({ role: 'user', content: userInput });
+    
     displayUserMessage(userInput);  
     document.getElementById("typedText").value = '';
 
     const requestPayload = {
         model: "smollm2:135m", 
-        messages: history,
+        content: userInput,
     };
 
     // Send request to chatbot server
@@ -775,7 +776,6 @@ function sendMessage(userInput) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'prompt': process.env.specialPrompt, // Optional, ensure your backend supports this
         },
         body: JSON.stringify(requestPayload),
     })
@@ -785,14 +785,11 @@ function sendMessage(userInput) {
             throw new Error(data.error);
         }
 
-        // Display bot's response
         displayBotMessage(data.response);
-        history.push({ role: 'system', content: data.response });
 
         // Handle intents if provided
-        if (data.queryResult && data.queryResult.intent) {
-            const intent = data.queryResult.intent.displayName;
-            const parameters = data.queryResult.parameters;
+        if (data.intent) {
+            const {name, parameters} = data.intent;
             intentHandler(intent, parameters);
         }
     })
@@ -812,6 +809,8 @@ function intentHandler(intent, parameters) {
             return modifyEvent(parameters);
         case "view_event":
             return viewEvent(parameters);
+        case "add_recurring_event":
+            return addRecurringEvents()
         default:
             return "I'm not sure how to handle that request.";
     }

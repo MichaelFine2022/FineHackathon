@@ -6,26 +6,29 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const ollama = new Ollama({
-    url: 'http://localhost:11434' // The Ollama service URL
+    url: 'http://localhost:11434' // Ollama service URL
 });
+
+let history = [
+    {role: "system", content: process.env.specialPrompt },
+]
 
 app.use(cors());
 app.use(express.json());
 
 // POST route to handle chat requests
 app.post('/chat', async (req, res) => {
-    const { model, messages } = req.body;
+    const { model, content } = req.body;
 
-    if (!model || !messages) {
+    if (!model || !content) {
         return res.status(400).json({ error: 'Missing required parameters' });
     }
-
+     
     try {
-        // Get a non-streaming response
-        const response = await ollama.chat({ model, messages });
-
-        // Return the content of the response
-        res.json({ response: response.message.content });
+        history.push({role:'user',content:content})
+        const response = await ollama.chat({ model, messages:history });
+        history.push({role:'system',content: response.message.content});
+        res.json({ response: response.message.content,intent:response.intent });
     } catch (error) {
         console.error('Error during chat:', error);
         res.status(500).json({ error: 'Chat request failed' });

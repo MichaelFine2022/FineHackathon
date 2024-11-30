@@ -7,8 +7,8 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #0d1b2a;
-    color: #e0e1dd;
+    background-color: #f4f6f9; /* Light gray background */
+    color: #333; /* Dark text for contrast */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -16,10 +16,10 @@ body {
 }
 
 .container {
-    background-color: #1b263b;
+    background-color: #ffffff; /* White background for the container */
     padding: 40px;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1); /* Soft shadow */
     width: 100%;
     max-width: 400px;
     text-align: center;
@@ -28,7 +28,7 @@ body {
 h1 {
     margin-bottom: 30px;
     font-size: 2em;
-    color: #f39c12;
+    color: #0056b3; /* Calmer blue for the header */
 }
 
 .form-group {
@@ -39,24 +39,25 @@ h1 {
 label {
     display: block;
     margin-bottom: 5px;
-    font-weight: bold;
-    color: #dd3719;
+    font-weight: 600;
+    color: #555; /* Dark gray text for labels */
 }
 
 input[type="text"],
 input[type="password"] {
     width: 100%;
-    padding: 10px;
-    border-radius: 5px;
-    border: none;
-    background-color: #361cc7;
-    color: #e0e1dd;
-    margin-bottom: 10px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc; /* Lighter border */
+    background-color: #fafafa; /* Lighter background for inputs */
+    color: #333; /* Dark text in inputs */
+    margin-bottom: 15px;
+    font-size: 1em;
 }
 
 input[type="text"]::placeholder,
 input[type="password"]::placeholder {
-    color: #e0e1dd;
+    color: #aaa; /* Slightly lighter placeholder text */
 }
 
 .form-actions {
@@ -68,53 +69,51 @@ button,
 a#signUpButton {
     width: 100%;
     padding: 15px;
-    border-radius: 5px;
+    border-radius: 8px;
     text-decoration: none;
     font-size: 1em;
-    font-weight: bold;
+    font-weight: 600;
     margin-top: 10px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 button {
-    background-color:  #dd3719;
+    background-color: #0056b3; /* Softer blue for the button */
     border: none;
-    color: #000;
+    color: #fff;
     cursor: pointer;
 }
 
 button:hover {
-    background-color: #dd3719;
+    background-color: #004085; /* Darker blue on hover */
+    transform: translateY(-2px); /* Slight lift on hover */
+}
+
+a#signUpButton {
+    background-color: transparent;
+    border: 2px solid #0056b3; /* Border matches the button color */
+    color: #0056b3;
+}
+
+a#signUpButton:hover {
+    background-color: #0056b3;
+    color: #fff; /* White text on hover */
+    transform: translateY(-2px); /* Slight lift on hover */
 }
 
 .form-actions input[type="submit"] {
-    background-color:  #dd3719;
-    color: #000;
+    background-color: #0056b3;
+    color: #fff;
     font-size: 16px;
-    padding: 10px 20px;
+    padding: 12px 20px;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
 .form-actions input[type="submit"]:hover {
-    background-color: #dd3719;
-}
-
-.signUpButton {
-    padding: 10px;
-}
-a#signUpButton {
-    background-color: transparent;
-    border: 2px solid #dd3719;
-    color: #dd3719;
-    padding-top:20px
-}
-
-a#signUpButton:hover {
-    background-color: #dd3719;
-    color: #000;
+    background-color: #004085;
 }
 
 .flash-messages {

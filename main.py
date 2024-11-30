@@ -112,7 +112,6 @@ def save_note():
     image.save(filename)
     return jsonify({'message': 'Note saved successfully', 'path': filename})
 
-GEMINI_API_KEY = 'AIzaSyAReW2abEQuw4cJofeDntJ8uyLlmlgEi3A' #this WILL be removed in prod
 @app.route('/recognize_math', methods=['POST'])
 def recognize_math():
     data = request.get_json()

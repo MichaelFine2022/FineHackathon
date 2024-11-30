@@ -55,16 +55,38 @@ function displayBotMessage(message) {
         //appends the div with the paragraph to the outgoing chat messages div 
         element.appendChild(newDiv)
 }
-function addEvent({name, date, time, description, isRecurring, recurrenceInterval}){
+function addEvent({ name, date, time, description = "", isRecurring = false, recurrenceInterval = "" }) {
     if (!name || !date || !time) {
-        return "Please provide all details for the event.";
+        console.error("Validation failed: Missing name, date, or time.");
+        return Promise.reject("Event name, date, and time are required to add an event.");
     }
-    const event = { name, date, time, id: Date.now(), description:description, isRecurring:isRecurring,recurrenceInterval:recurrenceInterval};
-    if(isRecurring){addRecurringEvents(event);}
-    else{
-        return db.put(event)
-        .then(() => `Event '${name}' added on ${date} at ${time}.`)
-        .catch(error => `Error adding event: ${error.message}`);
+
+    const event = {
+        _id: `event_${date}_${Date.now()}`, // Unique ID
+        name,
+        date: new Date(date).toISOString(),
+        time,
+        description: description || "",
+        isRecurring: !!isRecurring,
+        recurrenceInterval: recurrenceInterval || null,
+    };
+    console.log("Event object to insert:", event);
+    if (isRecurring) {
+        console.log("Adding recurring event...");
+        return addRecurringEvents(event)
+            .then(() => "Recurring event added successfully.")
+            .catch((error) => {
+                console.error("Error adding recurring event:", error);
+                throw error;
+            });
+    } else {
+        console.log("Adding single event...");
+        return events.put(event)
+            .then(() => `Event '${name}' added successfully on ${date} at ${time}.`)
+            .catch((error) => {
+                console.error("Error adding single event to PouchDB:", error);
+                throw error;
+            });
     }
 }
 function addEvent() {
@@ -761,36 +783,63 @@ function sendMessage(userInput) {
         displayBotMessage("Please enter a valid message.");
         return;
     }
-    if(userInput.toLowerCase() == "add an event"){
-        const eventName = prompt("What is the event name?");
-        const eventDate = prompt("What is the event date (YYYY-MM-DD)?");
-        const eventTime = prompt("What is the event time (HH:mm)?");
 
-        if (eventName && eventDate && eventTime) {
-            const event = {
-                name: eventName,
-                date: new Date(eventDate),
-                time: eventTime,
-            };
-            addEvent(event);
-            displayBotMessage(`Event "${eventName}" added successfully for ${eventDate} at ${eventTime}.`);
-            return; // Avoid sending the hardcoded input to the chatbot server
-        } else {
-            displayBotMessage("Failed to add event. Please provide all details.");
-            return;
-        }
-    }
-
-    
-    displayUserMessage(userInput);  
+    displayUserMessage(userInput);
     document.getElementById("typedText").value = '';
 
+    if (userInput.toLowerCase() === "add an event") {
+        // Locate form input fields
+        const eventNameInput = document.getElementById('eventTitle');
+        const eventDateInput = document.getElementById('eventDate');
+        const eventDescriptionInput = document.getElementById('eventDescription');
+        const recurringCheckbox = document.getElementById('recurring');
+        const recurrenceIntervalInput = document.getElementById('recurrenceInterval');
+
+        // Prompt for event details
+        const eventName = prompt("What is the event name?");
+        const eventDateStr = prompt("What is the event date (YYYY-MM-DD)?");
+        const eventTime = prompt("What is the event time (HH:mm)?");
+        const eventDescription = prompt("Enter a description (optional):");
+        const isRecurring = confirm("Is this a recurring event?");
+        const recurrenceInterval = isRecurring
+            ? prompt("Enter the recurrence interval (e.g., 'daily', 'weekly', 'monthly'):")
+            : "";
+
+        if (!eventName || !eventDateStr || !eventTime) {
+            displayBotMessage("Event name, date, and time are required to add an event.");
+            return;
+        }
+
+        console.log("Event inputs received:", { eventName, eventDateStr, eventTime, eventDescription, isRecurring, recurrenceInterval });
+
+        // Populate the input fields on the page
+        const eventDate = new Date(`${eventDateStr}T${eventTime}:00`);
+        eventNameInput.value = eventName;
+        eventDateInput.valueAsDate = eventDate; // Update the date input
+        eventDescriptionInput.value = eventDescription || "";
+        recurringCheckbox.checked = isRecurring;
+        recurrenceIntervalInput.value = recurrenceInterval;
+
+        console.log("Input fields updated. Calling addEvent.");
+
+        // Call the addEvent function
+        try {
+            addEvent(); // Trigger the event addition
+            displayBotMessage(`Event "${eventName}" added successfully for ${eventDateStr} at ${eventTime}.`);
+        } catch (error) {
+            displayBotMessage("Failed to add the event. Please try again.");
+            console.error("Error adding event:", error);
+        }
+
+        return;
+    }
+
+    // Handle other user inputs
     const requestPayload = {
-        model: "smollm2:135m", 
+        model: "smollm2:135m",
         content: userInput,
     };
 
-    // Send request to chatbot server
     fetch('http://localhost:3000/chat', {
         method: 'POST',
         headers: {
@@ -798,25 +847,25 @@ function sendMessage(userInput) {
         },
         body: JSON.stringify(requestPayload),
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            throw new Error(data.error);
-        }
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
 
-        displayBotMessage(data.response);
+            displayBotMessage(data.response);
 
-        // Handle intents if provided
-        if (data.intent) {
-            const {name, parameters} = data.intent;
-            intentHandler(intent, parameters);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        displayBotMessage(`Sorry, there was an error: ${error.message}`);
-    });
+            if (data.intent) {
+                const { name, parameters } = data.intent;
+                intentHandler(name, parameters);
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            displayBotMessage(`Sorry, there was an error: ${error.message}`);
+        });
 }
+
 
 function intentHandler(intent, parameters) {
     switch (intent) {
@@ -834,3 +883,84 @@ function intentHandler(intent, parameters) {
             return "I'm not sure how to handle that request.";
     }
 }
+
+let canva = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let isDrawing = false;
+let x = 0, y = 0;
+const undoStack = [];
+
+canvas.addEventListener('mousedown', startDrawing);
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('mouseup', stopDrawing);
+
+function startDrawing(e) {
+    isDrawing = true;
+    x = e.offsetX;
+    y = e.offsetY;
+}
+
+function draw(e) {
+    if (!isDrawing) return;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.closePath();
+
+    x = e.offsetX;
+    y = e.offsetY;
+}
+
+function stopDrawing() {
+    isDrawing = false;
+    undoStack.push(canva.toDataURL());
+}
+
+function clearCanvas() {
+    ctx.clearRect(0, 0, canva.width, canva.height);
+}
+
+function undo() {
+    if (undoStack.length === 0) return;
+    const img = new Image();
+    img.src = undoStack.pop();
+    img.onload = () => {
+        clearCanvas();
+        ctx.drawImage(img, 0, 0);
+    };
+}
+
+function saveCanvas() {
+    const dataURL = canvas.toDataURL('image/png');
+    fetch('/save_note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: dataURL })
+    })
+    .then(response => response.json())
+    .then(data => alert('Note saved successfully!'));
+}
+
+document.getElementById('math-input').addEventListener('input', () => {
+    const input = document.getElementById('math-input').value;
+    const preview = document.getElementById('math-preview');
+    preview.innerHTML = input;
+    MathJax.typesetPromise([preview]);
+});
+
+document.getElementById('saveButton').addEventListener('click', () => {
+    const image = canva.toDataURL();
+    fetch('/recognize_math', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: image })
+    })
+    .then(response => response.json())
+    .then(data => alert(data.result))  // Show recognized result
+    .catch(err => console.error('Error:', err));
+});
+

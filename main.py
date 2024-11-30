@@ -10,12 +10,10 @@ import requests
 
 app = Flask(__name__)
 app.secret_key = 'secret_key'
-SAVE_DIR = 'notes'
-os.makedirs(SAVE_DIR, exist_ok=True)
-GEMINI_API_URL = 'https://api.gemini.com/v1/recognize'
+
 
 # Configure the database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # SQLite for simplicity
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -43,10 +41,6 @@ def load_user(user_id):
 @app.route('/')
 def home():
     return redirect(url_for('login'))
-
-@app.route('/math', methods=['GET'])
-def toMath():
-    return "Math Page"
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -102,28 +96,6 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
-
-@app.route('/save_note', methods=['POST'])
-def save_note():
-    data = request.get_json()
-    image_data = data.get('image').split(',')[1]
-    image = Image.open(BytesIO(base64.b64decode(image_data)))
-    filename = os.path.join(SAVE_DIR, 'note.png')
-    image.save(filename)
-    return jsonify({'message': 'Note saved successfully', 'path': filename})
-
-@app.route('/recognize_math', methods=['POST'])
-def recognize_math():
-    data = request.get_json()
-    image_data = data.get('image').split(',')[1]  # Base64 part of image
-    response = requests.post(
-        GEMINI_API_URL,
-        headers={'Authorization': f'Bearer {GEMINI_API_KEY}'},
-        json={'image': image_data}
-    )
-    result = response.json()
-    return jsonify({'result': result.get('recognized_equation', 'No result')})
-
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -860,4 +860,11 @@ img {
     background-color: var(--primary-foreground);
     color: var(--primary);
   }
-  
+  canvas {
+    border: 1px solid var(--border);
+    margin: 1rem auto;
+    background-color: var(--background);
+    cursor: crosshair;
+    width:auto;
+    height:auto;
+}
